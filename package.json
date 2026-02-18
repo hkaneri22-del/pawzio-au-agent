@@ -1,9 +1,9 @@
 {
-  "name": "pawmate-au-agent",
+ "name": "pawzio-au-agent",
   "version": "1.0.0",
-  "scripts": {
-    "start": "node backend/src/agent/ai-media-agent.js"
-  },
+      "scripts": {
+  "start": "node backend/src/api.js"
+},
   "dependencies": {
     "axios": "^1.6.0",
     "dotenv": "^16.4.5",
