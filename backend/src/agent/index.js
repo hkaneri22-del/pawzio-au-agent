@@ -39,7 +39,7 @@ require("dotenv").config();
             })
             .sort((a, b) => b.score - a.score);
 
-          console.log("🐾 Top Pet Products (Learning Mode):");
+          console.log("🐾 Top Pet Products:");
           console.log(ranked.slice(0, 3));
 
           // 🛍 Create Top 3 Products in Shopify

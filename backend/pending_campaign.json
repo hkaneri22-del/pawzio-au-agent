@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-03-02T21:17:24.106Z",
+  "campaign": {
+    "name": "AI Test Campaign",
+    "budget": 20
+  },
+  "status": "PENDING_APPROVAL"
+}

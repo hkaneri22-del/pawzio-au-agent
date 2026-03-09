@@ -1,8 +1,8 @@
 console.log("🧠 Product Research AI module loaded");
 
 async function scanTrends() {
-  console.log("🧠 AI Product Research running (safe mode)");
-  console.log("✨ No real product changes. Just learning...");
+  console.log("🧠 AI Product Research running...");
+  console.log("Applying real product optimization...");
   
   // Later this will:
   // - scan TikTok

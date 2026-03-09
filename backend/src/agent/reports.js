@@ -1,7 +1,7 @@
 console.log("📊 Reports module loaded");
 
 async function weekly() {
-  console.log("📊 Reports.weekly() called — running in safe mode");
+  console.log("📊 Reports.weekly() running...");
 }
 
 module.exports = {

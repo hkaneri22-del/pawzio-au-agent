@@ -1,1 +1,1 @@
-require("./agent/index.js")
+require('./src/agent/index.js')

@@ -1,7 +1,7 @@
 console.log("🧾 OrderManager module loaded");
 
 async function process() {
-    console.log("🧾 OrderManager.process() called — running in safe mode");
+    console.log("📦 OrderManager.process() running...");
     // No real order actions here yet
 }
 
