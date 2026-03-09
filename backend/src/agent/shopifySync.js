@@ -4,6 +4,7 @@ const SHOPIFY_STORE = process.env.SHOPIFY_STORE_DOMAIN;
 const SHOPIFY_TOKEN = process.env.SHOPIFY_ADMIN_TOKEN;
 console.log("STORE:", SHOPIFY_STORE);
 console.log("TOKEN LENGTH:", SHOPIFY_TOKEN ? SHOPIFY_TOKEN.length : "NO TOKEN");
+console.log("TOKEN PREFIX:", SHOPIFY_TOKEN ? SHOPIFY_TOKEN.slice(0, 5) : "NO");
 
 
 async function createShopifyProduct(product) {
