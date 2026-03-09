@@ -1,7 +1,10 @@
 const axios = require("axios");
 
 const SHOPIFY_STORE = process.env.SHOPIFY_STORE_DOMAIN;
-const SHOPIFY_TOKEN = process.env.SHOPIFY_TOKEN;
+const SHOPIFY_TOKEN = process.env.SHOPIFY_ADMIN_TOKEN;
+console.log("STORE:", SHOPIFY_STORE);
+console.log("TOKEN LENGTH:", SHOPIFY_TOKEN ? SHOPIFY_TOKEN.length : "NO TOKEN");
+
 
 async function createShopifyProduct(product) {
 
@@ -28,7 +31,7 @@ images: product.images
 },
 {
 headers: {
-"X-Shopify-Access-Token": SHOPIFY_TOKEN,
+"X-Shopify-Access-Token": SHOPIFY_ADMIN_TOKEN,
 "Content-Type": "application/json"
 }
 }
