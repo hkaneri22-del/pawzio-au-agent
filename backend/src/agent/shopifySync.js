@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-const SHOPIFY_STORE = process.env.SHOPIFY_STORE;
+const SHOPIFY_STORE = process.env.SHOPIFY_STORE_DOMAIN;
 const SHOPIFY_TOKEN = process.env.SHOPIFY_TOKEN;
 
 async function createShopifyProduct(product) {
