@@ -3,67 +3,71 @@ console.log("🤖 AI Agent index.js loaded");
 require("dotenv").config();
 
 (async () => {
-  try {
-    console.log("🚀 AI Agent starting up...");
 
-    // Load modules
-    const productScanner = require("./productScanner");
-    const shopifySync = require("./shopifySync");
-    const cjIntegration = require("./cjIntegration");
-    const adsManager = require("./adsManager");
-    const orderManager = require("./orderManager");
-    const reports = require("./reports");
-    const productResearch = require("./productResearch");
-    const scoreProduct = require("./productScoring");
+try {
 
-    console.log("✅ All modules loaded successfully");
+console.log("🚀 AI Agent starting up...");
 
-    // Main loop runs every 60 seconds
-    setInterval(async () => {
+// Load modules
+const productScanner = require("./productScanner");
+const shopifySync = require("./shopifySync");
+const cjIntegration = require("./cjIntegration");
+const adsManager = require("./adsManager");
+const orderManager = require("./orderManager");
+const reports = require("./reports");
+const productResearch = require("./productResearch");
+const scoreProduct = require("./productScoring");
 
-      try {
+console.log("✅ All modules loaded successfully");
 
-        console.log("❤️ Heartbeat – running AI tasks...");
+// Run every 60 seconds
+setInterval(async () => {
 
-        // 🔎 Research products
-        const researched = await productScanner.scan();
+try {
 
-        if (researched && researched.length) {
+console.log("❤️ Heartbeat - running AI tasks...");
 
-          console.log("📊 Scoring pet products...");
+const researched = await productScanner.scan();
 
-          const ranked = researched
-            .map(p => {
-              p.score = scoreProduct(p);
-              return p;
-            })
-            .sort((a, b) => b.score - a.score);
+if (researched && researched.length) {
 
-          console.log("🐾 Top Pet Products:");
-          console.log(ranked.slice(0, 3));
+console.log("📊 Scoring pet products...");
 
-          // 🛍 Create Top 3 Products in Shopify
-          for (let product of ranked.slice(0, 3)) {
-            await createShopifyProduct(product);
-          }
-        }
+const ranked = researched
+.map(p => {
+p.score = scoreProduct(p);
+return p;
+})
+.sort((a, b) => b.score - a.score);
 
-        // 🔄 Sync + Operations
-        await shopifySync.sync();
-        await cjIntegration.syncOrders();
-        await adsManager.optimize();
-        await orderManager.process();
-        await reports.weekly();
-        await productResearch.scanTrends();
+console.log("🏆 Top Pet Products:");
+console.log(ranked.slice(0,3));
 
-      } catch (loopErr) {
-        console.error("❌ ERROR inside main loop:", loopErr);
-      }
+for (let product of ranked.slice(0,3)) {
+await shopifySync.createShopifyProduct(product);
+}
 
-    }, 60000);
+}
 
-  } catch (err) {
-    console.error("❌ FATAL STARTUP ERROR:", err);
-  }
+await shopifySync.sync();
+await cjIntegration.syncOrders();
+await adsManager.optimize();
+await orderManager.process();
+await reports.weekly();
+await productResearch.scanTrends();
+
+} catch(loopErr) {
+
+console.error("❌ ERROR inside main loop:", loopErr);
+
+}
+
+}, 60000);
+
+} catch (err) {
+
+console.error("❌ FATAL STARTUP ERROR:", err);
+
+}
 
 })();
