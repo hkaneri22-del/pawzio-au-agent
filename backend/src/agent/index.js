@@ -16,7 +16,7 @@ const adsManager = require("./adsManager");
 const orderManager = require("./orderManager");
 const reports = require("./reports");
 const productResearch = require("./productResearch");
-const scoreProduct = require("./productScoring");
+const { scoreProduct } = require("./productScoring");
 
 console.log("✅ All modules loaded successfully");
 
