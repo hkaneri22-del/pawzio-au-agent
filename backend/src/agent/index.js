@@ -45,30 +45,28 @@ console.log("🏆 Top Pet Products:");
 console.log(ranked.slice(0,3));
 
 for (let product of ranked.slice(0, 1)) {
+try {
 
-  try {
+const cjRaw = await cjIntegration.searchCJProductByKeyword(product.title);
 
-    const cjRaw = await cjIntegration.searchCJProductByKeyword(product.title);
+if (!cjRaw) {
+console.log("⚠️ No CJ match, skipping:", product.title);
+continue;
+}
 
-    if (!cjRaw) {
-      console.log("⚠️ No CJ match, skipping:", product.title);
-      continue;
-    }
+const cjProduct = cjIntegration.normalizeCJProduct(cjRaw);
 
-    const cjProduct = cjIntegration.normalizeCJProduct(cjRaw);
+console.log("✅ CJ match found:", cjProduct.title);
+console.log("🖼️ CJ image:", cjProduct.images?.[0] || "NO IMAGE");
 
-    console.log("✅ CJ match found:", cjProduct.title);
-    console.log("🖼️ CJ image:", cjProduct.images?.[0] || "NO IMAGE");
+await createShopifyProduct(cjProduct);
 
-    await createShopifyProduct(cjProduct);
+} catch (loopErr) {
 
-  } catch (loopErr) {
+console.log("❌ Product loop error:");
+console.log(loopErr.message);
 
-    console.log("❌ Product loop error:");
-    console.log(loopErr.message);
-
-  }
-
+}
 }
 await shopifySync.sync();
 await cjIntegration.syncOrders();
