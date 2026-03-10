@@ -32,7 +32,7 @@ images: product.images
 },
 {
 headers: {
-"X-Shopify-Access-Token": SHOPIFY_ADMIN_TOKEN,
+"X-Shopify-Access-Token": SHOPIFY_TOKEN,
 "Content-Type": "application/json"
 }
 }
