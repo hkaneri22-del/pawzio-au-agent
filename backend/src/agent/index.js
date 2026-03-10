@@ -1,3 +1,4 @@
+console.log("INDEX TEST 123");
 console.log("🤖 AI Agent index.js loaded");
 
 require("dotenv").config();
