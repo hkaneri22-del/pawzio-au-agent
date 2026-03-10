@@ -61,10 +61,10 @@ for (let product of ranked.slice(0, 1)) {
 
     await createShopifyProduct(cjProduct);
 
-  } catch (err) {
+  } catch (loopErr) {
 
-    console.log("❌ Product processing failed:");
-    console.log(err.message);
+    console.log("❌ Product loop error:");
+    console.log(loopErr.message);
 
   }
 
