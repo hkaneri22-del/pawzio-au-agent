@@ -55,10 +55,10 @@ variants: [
 price: product.price || "19.99",
 },
 ],
-images: product.images
-? product.images.map((img) => ({ src: img }))
-: [],
-},
+images:
+  product.images && product.images.length
+    ? [{ src: product.images[0] }]
+    : [],
 },
 {
 headers: {
