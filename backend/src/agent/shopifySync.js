@@ -84,6 +84,7 @@ title: cleanTitle || "AI Pet Product",
 body_html: `<strong>${product.description || "Best pet product for your pet!"}</strong>`,
 vendor: product.vendor || "Pawzio",
 product_type: product.product_type || "Pet Supplies",
+tags: "AI_IMPORTED,CJ_PRODUCT,REVIEW_PENDING",
 status: "draft",
 variants: [
 {
