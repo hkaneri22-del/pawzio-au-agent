@@ -45,8 +45,13 @@ require("dotenv").config();
  console.log(ranked.slice(0, 3));
 
  for (let product of ranked.slice(0, 1)) {
-
  try {
+ if (!product.title || product.title.length < 5) {
+ console.log(" Invalid product title, skipping");
+ continue;
+ }
+
+ console.log(" Trying CJ match for:", product.title);
 
  const cjRaw = await cjIntegration.searchCJProductByKeyword(product.title);
 
@@ -57,20 +62,27 @@ require("dotenv").config();
 
  const cjProduct = cjIntegration.normalizeCJProduct(cjRaw);
 
+ if (!cjProduct || !cjProduct.title) {
+ console.log(" Invalid CJ product, skipping");
+ continue;
+ }
+
+ if (!cjProduct.images || !cjProduct.images.length) {
+ console.log(" No CJ image found, skipping:", cjProduct.title);
+ continue;
+ }
+
  console.log(" CJ match found:", cjProduct.title);
- console.log(" CJ image:", cjProduct.images?.[0] || "NO IMAGE");
+ console.log(" CJ image:", cjProduct.images[0]);
 
- // Shopify product create
- await shopifySync.createShopifyProduct(cjProduct);
+ await createShopifyProduct(cjProduct);
 
+ break;
  } catch (loopErr) {
-
  console.log(" Product loop error:");
  console.log(loopErr.message);
-
  }
-
- }
+}
 
  // Run automation tasks
  await shopifySync.sync();
