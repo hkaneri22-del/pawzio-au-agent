@@ -20,7 +20,7 @@ const blockedKeywords = [
   "human"
 ];
 
-const text = ${product.title || ""} ${product.description || ""}.toLowerCase();
+const text = `${product.title || ""} ${product.description || ""}`.toLowerCase();
 
 for (const keyword of blockedKeywords) {
   if (text.includes(keyword)) {
