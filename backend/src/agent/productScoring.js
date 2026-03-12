@@ -3,6 +3,27 @@ console.log("🐶 Pet Product Scoring module loaded");
 function scoreProduct(product) {
 
   let score = 0;
+// Block irrelevant products
+const blockedKeywords = [
+  "wooden",
+  "coop",
+  "cage",
+  "chair",
+  "table",
+  "furniture",
+  "cabinet",
+  "decor",
+  "human"
+];
+
+const text = ${product.title || ""} ${product.description || ""}.toLowerCase();
+
+for (const keyword of blockedKeywords) {
+  if (text.includes(keyword)) {
+    console.log("❌ Blocked product:", product.title);
+    return -10;
+  }
+}
 
   // 1. Demand / Trend (0–25)
   score += (product.demand || 0) * 0.25;
