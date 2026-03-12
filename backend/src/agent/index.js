@@ -71,6 +71,66 @@ require("dotenv").config();
  console.log(" No CJ image found, skipping:", cjProduct.title);
  continue;
  }
+const blockedKeywords = [
+ "wooden",
+ "coop",
+ "cage",
+ "furniture",
+ "home decor",
+ "sofa",
+ "cabinet",
+ "table",
+ "chair"
+];
+
+const allowedKeywords = [
+ "pet",
+ "dog",
+ "cat",
+ "collar",
+ "leash",
+ "toy",
+ "bowl",
+ "feeder",
+ "fountain",
+ "grooming",
+ "hair remover",
+ "brush",
+ "bed",
+ "carrier",
+ "cleaning"
+];
+
+const titleText = String(cjProduct.title).toLowerCase();
+
+const hasBlockedKeyword = blockedKeywords.some(keyword =>
+ titleText.includes(keyword)
+);
+
+const hasAllowedKeyword = allowedKeywords.some(keyword =>
+ titleText.includes(keyword)
+);
+
+if (hasBlockedKeyword) {
+ console.log(" Blocked CJ product, skipping:", cjProduct.title);
+ continue;
+}
+
+if (!hasAllowedKeyword) {
+ console.log(" Non-pet / weak-match CJ product, skipping:", cjProduct.title);
+ continue;
+}
+
+if (Array.isArray(cjProduct.title)) {
+ cjProduct.title = cjProduct.title.join(" ");
+}
+
+cjProduct.title = String(cjProduct.title).replace(/[\[\]"]/g, "").trim();
+
+if (cjProduct.title.length < 5) {
+ console.log(" Bad CJ title after cleaning, skipping");
+ continue;
+}
 
  console.log(" CJ match found:", cjProduct.title);
  console.log(" CJ image:", cjProduct.images[0]);
