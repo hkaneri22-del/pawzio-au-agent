@@ -42,7 +42,7 @@ title: product.title || "AI Pet Product",
 body_html: `<strong>${product.description || "Best pet product for your pet!"}</strong>`,
 vendor: product.vendor || "Pawzio",
 product_type: product.product_type || "Pet Supplies",
-status: "active",
+status: "draft",
 variants: [
 {
 price: product.price || "19.99"
