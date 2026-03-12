@@ -1,5 +1,6 @@
 console.log("🐶 Pet Product Scoring module loaded");
 const { getTrendScore } = require("./trendSignal");
+const { getAmazonSignal } = require("./amazonSignal");
 
 async function scoreProduct(product) {
 
