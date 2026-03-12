@@ -1,4 +1,46 @@
 const axios = require("axios");
+async function productExistsInShopify(title) {
+try {
+const cleanTitle = String(product.title || "").trim();
+
+if (!cleanTitle) {
+console.log("⚠️ Empty title, skipping Shopify create");
+return;
+}
+
+const alreadyExists = await productExistsInShopify(cleanTitle);
+
+if (alreadyExists) {
+console.log("⚠️ Product already exists in Shopify:", cleanTitle);
+return;
+}
+
+if (!title) return false;
+
+const response = await axios.get(
+`https://${SHOPIFY_STORE}/admin/api/2023-10/products.json?title=${encodeURIComponent(title)}`,
+{
+headers: {
+"X-Shopify-Access-Token": SHOPIFY_TOKEN,
+"Content-Type": "application/json",
+},
+}
+);
+
+const products = response.data?.products || [];
+
+return products.some((p) => {
+const existingTitle = String(p.title || "").trim().toLowerCase();
+const newTitle = String(title || "").trim().toLowerCase();
+return existingTitle === newTitle;
+});
+} catch (err) {
+console.log("⚠️ Shopify duplicate check failed");
+console.log(err.response?.data || err.message);
+return false;
+}
+}
+
 
 console.log("🛍️ ShopifySync module loaded");
 
@@ -38,7 +80,7 @@ product.images && product.images.length
 
 const payload = {
 product: {
-title: product.title || "AI Pet Product",
+title: cleanTitle || "AI Pet Product",
 body_html: `<strong>${product.description || "Best pet product for your pet!"}</strong>`,
 vendor: product.vendor || "Pawzio",
 product_type: product.product_type || "Pet Supplies",
