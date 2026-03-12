@@ -2,6 +2,7 @@ console.log("🐶 Pet Product Scoring module loaded");
 const { getTrendScore } = require("./trendSignal");
 const { getAmazonSignal } = require("./amazonSignal");
 const { getTikTokSignal } = require("./tiktokSignal");
+const { getMetaSignal } = require("./metaSignal");
 
 async function scoreProduct(product) {
 
@@ -59,6 +60,9 @@ score += amazon * 3;
 //
 const tiktok = getTikTokSignal(product.title);
 score += tiktok * 4;
+// Meta Ads Library winner signal
+const meta = getMetaSignal(product.title);
+score += meta * 4;
 
  return score;
 }
