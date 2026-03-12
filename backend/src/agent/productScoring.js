@@ -1,6 +1,7 @@
 console.log("🐶 Pet Product Scoring module loaded");
 const { getTrendScore } = require("./trendSignal");
 const { getAmazonSignal } = require("./amazonSignal");
+const { getTikTokSignal } = require("./tiktokSignal");
 
 async function scoreProduct(product) {
 
@@ -48,11 +49,16 @@ for (const keyword of blockedKeywords) {
   // 7. Pet Relevance
  score += (product.petFit || 0) * 0.10;
 
- // Trend signal
+ // 
  if (product.title) {
    const trend = await getTrendScore(product.title);
    score += trend * 5;
  }
+const amazon = getAmazonSignal(product.title);
+score += amazon * 3;
+//
+const tiktok = getTikTokSignal(product.title);
+score += tiktok * 4;
 
  return score;
 }
