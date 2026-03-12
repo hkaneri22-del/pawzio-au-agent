@@ -88,7 +88,7 @@ require("dotenv").config();
 
  }
 
- }, 60000);
+ }, 3600000);
 
  } catch (err) {
 
