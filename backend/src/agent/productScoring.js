@@ -1,6 +1,7 @@
 console.log("🐶 Pet Product Scoring module loaded");
+const { getTrendScore } = require("./trendSignal");
 
-function scoreProduct(product) {
+async function scoreProduct(product) {
 
   let score = 0;
 // Block irrelevant products
@@ -43,10 +44,16 @@ for (const keyword of blockedKeywords) {
   // 6. Shipping Speed (0–10)
   score += (product.shipping || 0) * 0.10;
 
-  // 7. Pet Relevance (0–10)
-  score += (product.petFit || 0) * 0.10;
+  // 7. Pet Relevance
+ score += (product.petFit || 0) * 0.10;
 
-  return score;
+ // Trend signal
+ if (product.title) {
+   const trend = await getTrendScore(product.title);
+   score += trend * 5;
+ }
+
+ return score;
 }
 
 module.exports = {
