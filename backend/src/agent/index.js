@@ -23,6 +23,7 @@ require("dotenv").config();
  const { saveWinningKeywords } = require("./winningKeywordEngine");
  const { saveCampaignDraft } = require("./metaAdsDraft");
  const { saveCreativeDraft } = require("./autoAdCreativeEngine");
+ const { isGoodCJMatch } = require("./cjSmartMatch");
 
  console.log("All modules loaded successfully");
 
@@ -122,7 +123,7 @@ require("dotenv").config();
  continue;
  }
 
- const cjProduct = cjIntegration.normalizeCJProduct(cjRaw);
+ Product = cjIntegration.normalizeCJProduct(cjRaw);
 
  if (!cjProduct || !cjProduct.title) {
  console.log("Invalid CJ product, skipping");
@@ -273,6 +274,29 @@ require("dotenv").config();
 
  console.log("CJ match found:", cjProduct.title);
  console.log("CJ image:", cjProduct.images[0]);
+ const match = isGoodCJMatch(product.title, cjProduct.title);
+
+console.log("CJ match score:", match.score);
+
+if (!match.good) {
+  console.log("Rejected: weak CJ match");
+
+  if (
+    productMemory &&
+    typeof productMemory.addMemoryRecord === "function"
+  ) {
+    productMemory.addMemoryRecord({
+      title: product.title,
+      status: "rejected",
+      reason: "weak_cj_match",
+      score: match.score,
+      source: "cj_match_filter",
+      cjTitle: cjProduct.title || ""
+    });
+  }
+
+  continue;
+}
  const profitCheck = isProfitable(cjProduct);
 
 console.log("Profit analysis:", profitCheck.analysis);
