@@ -18,7 +18,7 @@ require("dotenv").config();
  const { createShopifyProduct } = require("./shopifySync");
  const { saveViralCandidates } = require("./viralDiscovery");
  const { getNextViralCandidates, markCandidateTested } = require("./viralQueue");
- const { hasMemory, addMemoryRecord, shouldSkipProduct } = require("./productMemory");
+ const productMemory = require("./productMemory");
  const { saveWinningKeywords } = require("./winningKeywordEngine");
 
  console.log("All modules loaded successfully");
@@ -53,79 +53,112 @@ require("dotenv").config();
  if (!shortlisted.length) {
  console.log(" No winning products found in this cycle");
  }
+
  saveViralCandidates(shortlisted.slice(0, 10));
  saveWinningKeywords();
+
  const queuedCandidates = getNextViralCandidates(3);
 
-console.log("📦 Viral Queue Candidates:");
-console.log(queuedCandidates);
+ console.log(" Viral Queue Candidates:");
+ console.log(queuedCandidates);
 
  const processingList = queuedCandidates.length
-  ? queuedCandidates
-  : shortlisted.slice(0, 2);
+ ? queuedCandidates
+ : shortlisted.slice(0, 2);
 
-for (let product of processingList) {
+ for (let product of processingList) {
  try {
-if (
-  productMemory &&
-  typeof productMemory.shouldSkipProduct === "function" &&
-  productMemory.shouldSkipProduct(product.title)
-) {
-  console.log("🧠 Memory says skip:", product.title);
-  continue;
-}
+ if (
+ productMemory &&
+ typeof productMemory.shouldSkipProduct === "function" &&
+ productMemory.shouldSkipProduct(product.title)
+ ) {
+ console.log(" Memory says skip:", product.title);
+ continue;
+ }
+
  if (!product.title || product.title.length < 5) {
-  console.log("Invalid product title, skipping");
-  addMemoryRecord({
-    title: product.title || "",
-    status: "rejected",
-    reason: "invalid_title",
-    score: product.score || 0,
-    source: "shortlist"
-  });
-  continue;
-}
+ console.log("Invalid product title, skipping");
+
+ if (
+ productMemory &&
+ typeof productMemory.addMemoryRecord === "function"
+ ) {
+ productMemory.addMemoryRecord({
+ title: product.title || "",
+ status: "rejected",
+ reason: "invalid_title",
+ score: product.score || 0,
+ source: "shortlist"
+ });
+ }
+
+ continue;
+ }
+
  console.log("Trying CJ match for:", product.title);
 
  const cjRaw = await cjIntegration.searchCJProductByKeyword(product.title);
 
  if (!cjRaw) {
-  console.log("No CJ match, skipping:", product.title);
-  addMemoryRecord({
-    title: product.title,
-    status: "rejected",
-    reason: "no_cj_match",
-    score: product.score || 0,
-    source: "cj_search"
-  });
-  continue;
-}
+ console.log("No CJ match, skipping:", product.title);
+
+ if (
+ productMemory &&
+ typeof productMemory.addMemoryRecord === "function"
+ ) {
+ productMemory.addMemoryRecord({
+ title: product.title,
+ status: "rejected",
+ reason: "no_cj_match",
+ score: product.score || 0,
+ source: "cj_search"
+ });
+ }
+
+ continue;
+ }
 
  const cjProduct = cjIntegration.normalizeCJProduct(cjRaw);
 
-if (!cjProduct || !cjProduct.title) {
-  console.log("Invalid CJ product, skipping");
-  addMemoryRecord({
-    title: product.title,
-    status: "rejected",
-    reason: "invalid_cj_product",
-    score: product.score || 0,
-    source: "cj_normalize"
-  });
-  continue;
-}
+ if (!cjProduct || !cjProduct.title) {
+ console.log("Invalid CJ product, skipping");
+
+ if (
+ productMemory &&
+ typeof productMemory.addMemoryRecord === "function"
+ ) {
+ productMemory.addMemoryRecord({
+ title: product.title,
+ status: "rejected",
+ reason: "invalid_cj_product",
+ score: product.score || 0,
+ source: "cj_normalize"
+ });
+ }
+
+ continue;
+ }
+
  if (!cjProduct.images || !cjProduct.images.length) {
-  console.log("No CJ image found, skipping:", cjProduct.title);
-  addMemoryRecord({
-    title: product.title,
-    status: "rejected",
-    reason: "no_cj_image",
-    score: product.score || 0,
-    source: "cj_product",
-    cjTitle: cjProduct.title || ""
-  });
-  continue;
-}
+ console.log("No CJ image found, skipping:", cjProduct.title);
+
+ if (
+ productMemory &&
+ typeof productMemory.addMemoryRecord === "function"
+ ) {
+ productMemory.addMemoryRecord({
+ title: product.title,
+ status: "rejected",
+ reason: "no_cj_image",
+ score: product.score || 0,
+ source: "cj_product",
+ cjTitle: cjProduct.title || ""
+ });
+ }
+
+ continue;
+ }
 
  const blockedKeywords = [
  "wooden",
@@ -168,30 +201,44 @@ if (!cjProduct || !cjProduct.title) {
  );
 
  if (hasBlockedKeyword) {
-  console.log("Blocked CJ product, skipping:", cjProduct.title);
-  addMemoryRecord({
-    title: product.title,
-    status: "rejected",
-    reason: "blocked_keyword",
-    score: product.score || 0,
-    source: "cj_product",
-    cjTitle: cjProduct.title || ""
-  });
-  continue;
-}
+ console.log("Blocked CJ product, skipping:", cjProduct.title);
+
+ if (
+ productMemory &&
+ typeof productMemory.addMemoryRecord === "function"
+ ) {
+ productMemory.addMemoryRecord({
+ title: product.title,
+ status: "rejected",
+ reason: "blocked_keyword",
+ score: product.score || 0,
+ source: "cj_product",
+ cjTitle: cjProduct.title || ""
+ });
+ }
+
+ continue;
+ }
 
  if (!hasAllowedKeyword) {
-  console.log("Non-pet / weak-match CJ product, skipping:", cjProduct.title);
-  addMemoryRecord({
-    title: product.title,
-    status: "rejected",
-    reason: "weak_pet_match",
-    score: product.score || 0,
-    source: "cj_product",
-    cjTitle: cjProduct.title || ""
-  });
-  continue;
-}
+ console.log("Non-pet / weak-match CJ product, skipping:", cjProduct.title);
+
+ if (
+ productMemory &&
+ typeof productMemory.addMemoryRecord === "function"
+ ) {
+ productMemory.addMemoryRecord({
+ title: product.title,
+ status: "rejected",
+ reason: "weak_pet_match",
+ score: product.score || 0,
+ source: "cj_product",
+ cjTitle: cjProduct.title || ""
+ });
+ }
+
+ continue;
+ }
 
  if (Array.isArray(cjProduct.title)) {
  cjProduct.title = cjProduct.title.join(" ");
@@ -202,47 +249,66 @@ if (!cjProduct || !cjProduct.title) {
  .trim();
 
  if (cjProduct.title.length < 5) {
-  console.log("Bad CJ title after cleaning, skipping");
-  addMemoryRecord({
-    title: product.title,
-    status: "rejected",
-    reason: "bad_cleaned_cj_title",
-    score: product.score || 0,
-    source: "cj_product",
-    cjTitle: cjProduct.title || ""
-  });
-  continue;
-}
+ console.log("Bad CJ title after cleaning, skipping");
+
+ if (
+ productMemory &&
+ typeof productMemory.addMemoryRecord === "function"
+ ) {
+ productMemory.addMemoryRecord({
+ title: product.title,
+ status: "rejected",
+ reason: "bad_cleaned_cj_title",
+ score: product.score || 0,
+ source: "cj_product",
+ cjTitle: cjProduct.title || ""
+ });
+ }
+
+ continue;
+ }
+
  console.log("CJ match found:", cjProduct.title);
  console.log("CJ image:", cjProduct.images[0]);
 
  const created = await createShopifyProduct(cjProduct);
 
-addMemoryRecord({
-  title: product.title,
-  status: created ? "shopify_created" : "rejected",
-  reason: created ? "created_successfully" : "shopify_create_failed",
-  score: product.score || 0,
-  source: "shopify",
-  cjTitle: cjProduct.title || "",
-  shopifyCreated: Boolean(created)
-});
+ if (
+ productMemory &&
+ typeof productMemory.addMemoryRecord === "function"
+ ) {
+ productMemory.addMemoryRecord({
+ title: product.title,
+ status: created ? "shopify_created" : "rejected",
+ reason: created ? "created_successfully" : "shopify_create_failed",
+ score: product.score || 0,
+ source: "shopify",
+ cjTitle: cjProduct.title || "",
+ shopifyCreated: Boolean(created)
+ });
+ }
 
-markCandidateTested(product.title);
+ markCandidateTested(product.title);
 
-if (created) {
-  break;
-}
+ if (created) {
+ break;
+ }
  } catch (loopErr) {
  console.log("Product loop error:");
  console.log(loopErr.message);
- addMemoryRecord({
-  title: product?.title || "",
-  status: "rejected",
-  reason: loopErr.message || "product_loop_error",
-  score: product?.score || 0,
-  source: "loop_error"
-});
+
+ if (
+ productMemory &&
+ typeof productMemory.addMemoryRecord === "function"
+ ) {
+ productMemory.addMemoryRecord({
+ title: product?.title || "",
+ status: "rejected",
+ reason: loopErr.message || "product_loop_error",
+ score: product?.score || 0,
+ source: "loop_error"
+ });
+ }
  }
  }
  }
@@ -253,8 +319,7 @@ if (created) {
  await orderManager.process();
  await reports.weekly();
  await productResearch.scanTrends();
- 
-} catch (loopErr) {
+ } catch (loopErr) {
  console.error("ERROR inside main loop:", loopErr);
  }
  }, 60000);
