@@ -11,7 +11,6 @@ return [];
 
 const raw = fs.readFileSync(MEMORY_PATH, "utf8");
 const parsed = JSON.parse(raw);
-
 return Array.isArray(parsed) ? parsed : [];
 } catch (err) {
 console.log("❌ Failed to read product memory");
@@ -38,14 +37,12 @@ return String(title || "").trim().toLowerCase();
 function hasMemory(title) {
 const memory = readMemory();
 const normalized = normalizeTitle(title);
-
 return memory.some((item) => normalizeTitle(item.title) === normalized);
 }
 
 function getMemoryRecord(title) {
 const memory = readMemory();
 const normalized = normalizeTitle(title);
-
 return memory.find((item) => normalizeTitle(item.title) === normalized) || null;
 }
 
@@ -82,10 +79,121 @@ memory.push(newRecord);
 writeMemory(memory);
 }
 
+function shouldSkipProduct(title) {
+const record = getMemoryRecord(title);
+
+if (!record) return false;
+
+const permanentRejectReasons = [
+"blocked_keyword",
+"weak_pet_match",
+"invalid_title",
+"bad_cleaned_cj_title"
+];
+
+if (record.status === "shopify_created") return true;
+if (permanentRejectReasons.includes(record.reason)) return true;
+
+return false;
+}
+
+function getMemoryStatsForTitle(title) {
+const memory = readMemory();
+const lowerTitle = String(title || "").toLowerCase();
+
+const successKeywords = [
+"hair",
+"remover",
+"brush",
+"grooming",
+"fountain",
+"collar",
+"toy",
+"cleaning",
+"fur",
+"portable"
+];
+
+const weakKeywords = [
+"wooden",
+"coop",
+"cage",
+"furniture",
+"sofa",
+"cabinet",
+"chair",
+"table",
+"decor"
+];
+
+let successfulPatternHits = 0;
+let rejectedPatternHits = 0;
+let blockedPatternHits = 0;
+
+for (const item of memory) {
+const memTitle = String(item.title || "").toLowerCase();
+
+for (const kw of successKeywords) {
+if (
+lowerTitle.includes(kw) &&
+memTitle.includes(kw) &&
+item.status === "shopify_created"
+) {
+successfulPatternHits += 1;
+}
+}
+
+for (const kw of weakKeywords) {
+if (
+lowerTitle.includes(kw) &&
+memTitle.includes(kw) &&
+item.status === "rejected"
+) {
+rejectedPatternHits += 1;
+}
+}
+
+if (
+item.reason === "blocked_keyword" &&
+weakKeywords.some((kw) => lowerTitle.includes(kw) && memTitle.includes(kw))
+) {
+blockedPatternHits += 1;
+}
+}
+
+return {
+successfulPatternHits,
+rejectedPatternHits,
+blockedPatternHits
+};
+}
+
+function getMemoryScoreAdjustment(title) {
+const stats = getMemoryStatsForTitle(title);
+
+let boost = 0;
+let penalty = 0;
+
+boost += stats.successfulPatternHits * 1.5;
+penalty += stats.rejectedPatternHits * 1.5;
+penalty += stats.blockedPatternHits * 2;
+
+return {
+...stats,
+boost,
+penalty,
+adjustment: boost - penalty
+};
+}
+
 module.exports = {
 readMemory,
 writeMemory,
+normalizeTitle,
 hasMemory,
 getMemoryRecord,
-addMemoryRecord
+addMemoryRecord,
+shouldSkipProduct,
+getMemoryStatsForTitle,
+getMemoryScoreAdjustment
 };

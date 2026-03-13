@@ -66,10 +66,14 @@ console.log(queuedCandidates);
 
 for (let product of processingList) {
  try {
-if (shouldSkipProduct(product.title)) {
+if (
+  productMemory &&
+  typeof productMemory.shouldSkipProduct === "function" &&
+  productMemory.shouldSkipProduct(product.title)
+) {
   console.log("🧠 Memory says skip:", product.title);
   continue;
-} if (!product.title || product.title.length < 5) {
+}} if (!product.title || product.title.length < 5) {
   console.log("Invalid product title, skipping");
   addMemoryRecord({
     title: product.title || "",
