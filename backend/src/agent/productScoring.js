@@ -1,72 +1,127 @@
-console.log("🐶 Pet Product Scoring module loaded");
+console.log(" Pet Product Scoring module loaded");
+
 const { getTrendScore } = require("./trendSignal");
 const { getAmazonSignal } = require("./amazonSignal");
 const { getTikTokSignal } = require("./tiktokSignal");
 const { getMetaSignal } = require("./metaSignal");
 
-async function scoreProduct(product) {
-
-  let score = 0;
-// Block irrelevant products
-const blockedKeywords = [
-  "wooden",
-  "coop",
-  "cage",
-  "chair",
-  "table",
-  "furniture",
-  "cabinet",
-  "decor",
-  "human"
-];
-
-const text = `${product.title || ""} ${product.description || ""}`.toLowerCase();
-
-for (const keyword of blockedKeywords) {
-  if (text.includes(keyword)) {
-    console.log("❌ Blocked product:", product.title);
-    return -10;
-  }
+function safeNumber(value, fallback = 0) {
+ const num = Number(value);
+ return Number.isFinite(num) ? num : fallback;
 }
 
-  // 1. Demand / Trend (0–25)
-  score += (product.demand || 0) * 0.25;
+async function scoreProduct(product) {
+ let score = 0;
 
-  // 2. Margin (0–20)
-  score += (product.margin || 0) * 0.20;
+ const title = String(product.title || "");
+ const description = String(product.description || "");
+ const text = `${title} ${description}`.toLowerCase();
 
-  // 3. Competition (lower = better) (0–15)
-  score += ((10 - (product.competition || 0)) * 0.15);
+ // Block irrelevant products
+ const blockedKeywords = [
+ "wooden",
+ "coop",
+ "cage",
+ "chair",
+ "table",
+ "furniture",
+ "cabinet",
+ "decor",
+ "human"
+ ];
 
-  // 4. Reviews Quality (0–10)
-  score += (product.reviews || 0) * 0.10;
-
-  // 5. Refund Risk (lower = better) (0–10)
-  score += ((10 - (product.refundRisk || 0)) * 0.10);
-
-  // 6. Shipping Speed (0–10)
-  score += (product.shipping || 0) * 0.10;
-
-  // 7. Pet Relevance
- score += (product.petFit || 0) * 0.10;
-
- // 
- if (product.title) {
-   const trend = await getTrendScore(product.title);
-   score += trend * 5;
+ for (const keyword of blockedKeywords) {
+ if (text.includes(keyword)) {
+ console.log(" Blocked product:", product.title);
+ return -10;
  }
-const amazon = getAmazonSignal(product.title);
-score += amazon * 3;
-//
-const tiktok = getTikTokSignal(product.title);
-score += tiktok * 4;
-// Meta Ads Library winner signal
-const meta = getMetaSignal(product.title);
-score += meta * 4;
+ }
 
- return score;
+ // Winner keywords bonus
+ const winnerKeywords = [
+ "hair remover",
+ "grooming",
+ "self cleaning",
+ "portable",
+ "leak proof",
+ "water fountain",
+ "brush",
+ "travel",
+ "cleaner",
+ "lick mat"
+ ];
+
+ for (const keyword of winnerKeywords) {
+ if (text.includes(keyword)) {
+ score += 1.5;
+ }
+ }
+
+ // Bad title / image penalty
+ if (!title || title.length < 8) {
+ score -= 3;
+ }
+
+ if (!product.images || !product.images.length) {
+ score -= 4;
+ }
+
+ // Price sweet spot
+ const price = safeNumber(product.price, 0);
+ if (price >= 10 && price <= 35) {
+ score += 2;
+ } else if (price > 35 && price <= 60) {
+ score += 1;
+ } else if (price > 60) {
+ score -= 2;
+ }
+
+ // Core scoring
+ score += safeNumber(product.demand) * 0.25;
+ score += safeNumber(product.margin) * 0.20;
+ score += (10 - safeNumber(product.competition)) * 0.15;
+ score += safeNumber(product.reviews) * 0.10;
+ score += (10 - safeNumber(product.refundRisk)) * 0.10;
+ score += safeNumber(product.shipping) * 0.10;
+ score += safeNumber(product.petFit) * 0.10;
+
+ // Trend signal
+ let trend = 0;
+ try {
+ trend = safeNumber(await getTrendScore(title), 0);
+ } catch (err) {
+ console.log(" Trend score failed:", err.message);
+ }
+ score += trend * 5;
+
+ // Amazon signal
+ const amazon = safeNumber(getAmazonSignal(title), 0);
+ score += amazon * 3;
+
+ // TikTok signal
+ const tiktok = safeNumber(getTikTokSignal(title), 0);
+ score += tiktok * 4;
+
+ // Meta signal
+ const meta = safeNumber(getMetaSignal(title), 0);
+ score += meta * 4;
+
+ // Final guard
+ score = safeNumber(score, 0);
+
+ console.log(" Score breakdown:", {
+ title,
+ basePrice: price,
+ trend,
+ amazon,
+ tiktok,
+ meta,
+ finalScore: score
+ });
+
+ return Number(score.toFixed(2));
 }
 
 module.exports = {
-  scoreProduct
+ scoreProduct
 };
