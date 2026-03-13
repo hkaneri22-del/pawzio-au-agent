@@ -81,11 +81,29 @@ memory.push(newRecord);
 
 writeMemory(memory);
 }
+function shouldSkipProduct(title) {
+  const record = getMemoryRecord(title);
 
+  if (!record) return false;
+
+  const permanentRejectReasons = [
+    "blocked_keyword",
+    "weak_pet_match",
+    "invalid_title",
+    "bad_cleaned_cj_title"
+  ];
+
+  if (record.status === "shopify_created") return true;
+
+  if (permanentRejectReasons.includes(record.reason)) return true;
+
+  return false;
+}
 module.exports = {
-readMemory,
-writeMemory,
-hasMemory,
-getMemoryRecord,
-addMemoryRecord
+  readMemory,
+  writeMemory,
+  hasMemory,
+  getMemoryRecord,
+  addMemoryRecord,
+  shouldSkipProduct
 };

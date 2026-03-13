@@ -18,7 +18,7 @@ require("dotenv").config();
  const { createShopifyProduct } = require("./shopifySync");
  const { saveViralCandidates } = require("./viralDiscovery");
  const { getNextViralCandidates, markCandidateTested } = require("./viralQueue");
- const { hasMemory, addMemoryRecord } = require("./productMemory");
+ const { hasMemory, addMemoryRecord, shouldSkipProduct } = require("./productMemory");
 
  console.log("All modules loaded successfully");
 
@@ -64,11 +64,10 @@ console.log(queuedCandidates);
 
 for (let product of processingList) {
  try {
- if (hasMemory(product.title)) {
-  console.log("🧠 Already in memory, skipping:", product.title);
+if (shouldSkipProduct(product.title)) {
+  console.log("🧠 Memory says skip:", product.title);
   continue;
-}
- if (!product.title || product.title.length < 5) {
+} if (!product.title || product.title.length < 5) {
   console.log("Invalid product title, skipping");
   addMemoryRecord({
     title: product.title || "",
@@ -210,12 +209,33 @@ if (!cjProduct || !cjProduct.title) {
  console.log("CJ match found:", cjProduct.title);
  console.log("CJ image:", cjProduct.images[0]);
 
- await createShopifyProduct(cjProduct);
- markCandidateTested(product.title);
- break;
+ const created = await createShopifyProduct(cjProduct);
+
+addMemoryRecord({
+  title: product.title,
+  status: created ? "shopify_created" : "rejected",
+  reason: created ? "created_successfully" : "shopify_create_failed",
+  score: product.score || 0,
+  source: "shopify",
+  cjTitle: cjProduct.title || "",
+  shopifyCreated: Boolean(created)
+});
+
+markCandidateTested(product.title);
+
+if (created) {
+  break;
+}
  } catch (loopErr) {
  console.log("Product loop error:");
  console.log(loopErr.message);
+ addMemoryRecord({
+  title: product?.title || "",
+  status: "rejected",
+  reason: loopErr.message || "product_loop_error",
+  score: product?.score || 0,
+  source: "loop_error"
+});
  }
  }
  }
@@ -226,7 +246,8 @@ if (!cjProduct || !cjProduct.title) {
  await orderManager.process();
  await reports.weekly();
  await productResearch.scanTrends();
- } catch (loopErr) {
+ 
+} catch (loopErr) {
  console.error("ERROR inside main loop:", loopErr);
  }
  }, 60000);
