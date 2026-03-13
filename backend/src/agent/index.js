@@ -171,7 +171,7 @@ if (cjProduct.title.length < 5) {
 
  }
 
- }, 3600000);
+ }, 60000);
 
  } catch (err) {
 
