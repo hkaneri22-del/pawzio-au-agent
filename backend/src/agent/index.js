@@ -1,88 +1,84 @@
 console.log("INDEX TEST 123");
-console.log(" AI Agent index.js loaded");
+console.log("AI Agent index.js loaded");
 
 require("dotenv").config();
 
 (async () => {
-
  try {
-
- console.log(" AI Agent starting up...");
+ console.log("AI Agent starting up...");
 
  // Load modules
  const productScanner = require("./productScanner");
-  const cjIntegration = require("./cjIntegration");
+ const cjIntegration = require("./cjIntegration");
  const adsManager = require("./adsManager");
  const orderManager = require("./orderManager");
  const reports = require("./reports");
  const productResearch = require("./productResearch");
  const { scoreProduct } = require("./productScoring");
-const { createShopifyProduct } = require("./shopifySync");
+ const { createShopifyProduct } = require("./shopifySync");
 
- console.log(" All modules loaded successfully");
+ console.log("All modules loaded successfully");
 
  // Run every 60 seconds
  setInterval(async () => {
-
  try {
-
- console.log(" Heartbeat - running AI tasks...");
+ console.log("Heartbeat - running AI tasks...");
 
  const researched = await productScanner.scan();
 
  if (researched && researched.length) {
-
- console.log(" Scoring pet products...");
+ console.log("Scoring pet products...");
 
  const scoredProducts = await Promise.all(
-  researched.map(async (p) => {
-    p.score = await scoreProduct(p);
-    return p;
-  })
-);
+ researched.map(async (p) => {
+ p.score = await scoreProduct(p);
+ return p;
+ })
+ );
 
-const ranked = scoredProducts.sort((a, b) => b.score - a.score);
+ const ranked = scoredProducts.sort((a, b) => b.score - a.score);
 
-console.log("🏆 Top Pet Products:");
-console.log(ranked.slice(0, 3));
+ console.log(" Top Pet Products:");
+ console.log(ranked.slice(0, 3));
 
-const shortlisted = ranked.filter((p) => p.score >= 7);
+ const shortlisted = ranked.filter((p) => p.score >= 5);
 
-console.log("✅ Winning Product Shortlist:");
-console.log(shortlisted.slice(0, 5));
+ console.log(" Winning Product Shortlist:");
+ console.log(shortlisted.slice(0, 5));
 
-if (!shortlisted.length) {
-  console.log("⚠️ No winning products found in this cycle");
-}
+ if (!shortlisted.length) {
+ console.log(" No winning products found in this cycle");
+ }
 
- for (let product of shortlisted.slice(0, 1)) {
+ for (let product of shortlisted.slice(0, 2)) {
  try {
  if (!product.title || product.title.length < 5) {
- console.log(" Invalid product title, skipping");
+ console.log("Invalid product title, skipping");
  continue;
  }
 
- console.log(" Trying CJ match for:", product.title);
+ console.log("Trying CJ match for:", product.title);
 
  const cjRaw = await cjIntegration.searchCJProductByKeyword(product.title);
 
  if (!cjRaw) {
- console.log(" No CJ match, skipping:", product.title);
+ console.log("No CJ match, skipping:", product.title);
  continue;
  }
 
  const cjProduct = cjIntegration.normalizeCJProduct(cjRaw);
 
  if (!cjProduct || !cjProduct.title) {
- console.log(" Invalid CJ product, skipping");
+ console.log("Invalid CJ product, skipping");
  continue;
  }
 
  if (!cjProduct.images || !cjProduct.images.length) {
- console.log(" No CJ image found, skipping:", cjProduct.title);
+ console.log("No CJ image found, skipping:", cjProduct.title);
  continue;
  }
-const blockedKeywords = [
+
+ const blockedKeywords = [
  "wooden",
  "coop",
  "cage",
@@ -92,9 +88,9 @@ const blockedKeywords = [
  "cabinet",
  "table",
  "chair"
-];
+ ];
 
-const allowedKeywords = [
+ const allowedKeywords = [
  "pet",
  "dog",
  "cat",
@@ -110,73 +106,65 @@ const allowedKeywords = [
  "bed",
  "carrier",
  "cleaning"
-];
+ ];
 
-const titleText = String(cjProduct.title).toLowerCase();
+ const titleText = String(cjProduct.title).toLowerCase();
 
-const hasBlockedKeyword = blockedKeywords.some(keyword =>
+ const hasBlockedKeyword = blockedKeywords.some((keyword) =>
  titleText.includes(keyword)
-);
+ );
 
-const hasAllowedKeyword = allowedKeywords.some(keyword =>
+ const hasAllowedKeyword = allowedKeywords.some((keyword) =>
  titleText.includes(keyword)
-);
+ );
 
-if (hasBlockedKeyword) {
- console.log(" Blocked CJ product, skipping:", cjProduct.title);
+ if (hasBlockedKeyword) {
+ console.log("Blocked CJ product, skipping:", cjProduct.title);
  continue;
-}
+ }
 
-if (!hasAllowedKeyword) {
- console.log(" Non-pet / weak-match CJ product, skipping:", cjProduct.title);
+ if (!hasAllowedKeyword) {
+ console.log("Non-pet / weak-match CJ product, skipping:", cjProduct.title);
  continue;
-}
+ }
 
-if (Array.isArray(cjProduct.title)) {
+ if (Array.isArray(cjProduct.title)) {
  cjProduct.title = cjProduct.title.join(" ");
-}
+ }
 
-cjProduct.title = String(cjProduct.title).replace(/[\[\]"]/g, "").trim();
+ cjProduct.title = String(cjProduct.title)
+ .replace(/[\[\]"]/g, "")
+ .trim();
 
-if (cjProduct.title.length < 5) {
- console.log(" Bad CJ title after cleaning, skipping");
+ if (cjProduct.title.length < 5) {
+ console.log("Bad CJ title after cleaning, skipping");
  continue;
-}
+ }
 
- console.log(" CJ match found:", cjProduct.title);
- console.log(" CJ image:", cjProduct.images[0]);
+ console.log("CJ match found:", cjProduct.title);
+ console.log("CJ image:", cjProduct.images[0]);
 
  await createShopifyProduct(cjProduct);
 
  break;
  } catch (loopErr) {
- console.log(" Product loop error:");
+ console.log("Product loop error:");
  console.log(loopErr.message);
  }
-}
+ }
+ }
 
  // Run automation tasks
-  await cjIntegration.syncOrders();
+ await cjIntegration.syncOrders();
  await adsManager.optimize();
  await orderManager.process();
  await reports.weekly();
- await productResearch.scanTrends(); 
- await createShopifyProduct(researched[0]);
-
- }
-
+ await productResearch.scanTrends();
  } catch (loopErr) {
-
- console.error(" ERROR inside main loop:", loopErr);
-
+ console.error("ERROR inside main loop:", loopErr);
  }
-
  }, 60000);
-
  } catch (err) {
-
- console.error(" FATAL STARTUP ERROR:", err);
-
+ console.error("FATAL STARTUP ERROR:", err);
  }
-
 })();
