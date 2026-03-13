@@ -16,6 +16,7 @@ require("dotenv").config();
  const productResearch = require("./productResearch");
  const { scoreProduct } = require("./productScoring");
  const { createShopifyProduct } = require("./shopifySync");
+ const { isProfitable } = require("./profitEngine");
  const { saveViralCandidates } = require("./viralDiscovery");
  const { getNextViralCandidates, markCandidateTested } = require("./viralQueue");
  const productMemory = require("./productMemory");
@@ -270,6 +271,29 @@ require("dotenv").config();
 
  console.log("CJ match found:", cjProduct.title);
  console.log("CJ image:", cjProduct.images[0]);
+ const profitCheck = isProfitable(cjProduct);
+
+console.log("Profit analysis:", profitCheck.analysis);
+
+if (!profitCheck.pass) {
+  console.log("Rejected: Low profit margin");
+
+  if (
+    productMemory &&
+    typeof productMemory.addMemoryRecord === "function"
+  ) {
+    productMemory.addMemoryRecord({
+      title: product.title,
+      status: "rejected",
+      reason: "low_profit_margin",
+      score: product.score || 0,
+      source: "profit_engine",
+      cjTitle: cjProduct.title || ""
+    });
+  }
+
+  continue;
+}
 
  const created = await createShopifyProduct(cjProduct);
 
