@@ -18,6 +18,7 @@ require("dotenv").config();
  const { createShopifyProduct } = require("./shopifySync");
  const { saveViralCandidates } = require("./viralDiscovery");
  const { getNextViralCandidates, markCandidateTested } = require("./viralQueue");
+ const { hasMemory, addMemoryRecord } = require("./productMemory");
 
  console.log("All modules loaded successfully");
 
@@ -63,31 +64,62 @@ console.log(queuedCandidates);
 
 for (let product of processingList) {
  try {
+ if (hasMemory(product.title)) {
+  console.log("🧠 Already in memory, skipping:", product.title);
+  continue;
+}
  if (!product.title || product.title.length < 5) {
- console.log("Invalid product title, skipping");
- continue;
- }
-
+  console.log("Invalid product title, skipping");
+  addMemoryRecord({
+    title: product.title || "",
+    status: "rejected",
+    reason: "invalid_title",
+    score: product.score || 0,
+    source: "shortlist"
+  });
+  continue;
+}
  console.log("Trying CJ match for:", product.title);
 
  const cjRaw = await cjIntegration.searchCJProductByKeyword(product.title);
 
  if (!cjRaw) {
- console.log("No CJ match, skipping:", product.title);
- continue;
- }
+  console.log("No CJ match, skipping:", product.title);
+  addMemoryRecord({
+    title: product.title,
+    status: "rejected",
+    reason: "no_cj_match",
+    score: product.score || 0,
+    source: "cj_search"
+  });
+  continue;
+}
 
  const cjProduct = cjIntegration.normalizeCJProduct(cjRaw);
 
- if (!cjProduct || !cjProduct.title) {
- console.log("Invalid CJ product, skipping");
- continue;
- }
-
+if (!cjProduct || !cjProduct.title) {
+  console.log("Invalid CJ product, skipping");
+  addMemoryRecord({
+    title: product.title,
+    status: "rejected",
+    reason: "invalid_cj_product",
+    score: product.score || 0,
+    source: "cj_normalize"
+  });
+  continue;
+}
  if (!cjProduct.images || !cjProduct.images.length) {
- console.log("No CJ image found, skipping:", cjProduct.title);
- continue;
- }
+  console.log("No CJ image found, skipping:", cjProduct.title);
+  addMemoryRecord({
+    title: product.title,
+    status: "rejected",
+    reason: "no_cj_image",
+    score: product.score || 0,
+    source: "cj_product",
+    cjTitle: cjProduct.title || ""
+  });
+  continue;
+}
 
  const blockedKeywords = [
  "wooden",
@@ -130,14 +162,30 @@ for (let product of processingList) {
  );
 
  if (hasBlockedKeyword) {
- console.log("Blocked CJ product, skipping:", cjProduct.title);
- continue;
- }
+  console.log("Blocked CJ product, skipping:", cjProduct.title);
+  addMemoryRecord({
+    title: product.title,
+    status: "rejected",
+    reason: "blocked_keyword",
+    score: product.score || 0,
+    source: "cj_product",
+    cjTitle: cjProduct.title || ""
+  });
+  continue;
+}
 
  if (!hasAllowedKeyword) {
- console.log("Non-pet / weak-match CJ product, skipping:", cjProduct.title);
- continue;
- }
+  console.log("Non-pet / weak-match CJ product, skipping:", cjProduct.title);
+  addMemoryRecord({
+    title: product.title,
+    status: "rejected",
+    reason: "weak_pet_match",
+    score: product.score || 0,
+    source: "cj_product",
+    cjTitle: cjProduct.title || ""
+  });
+  continue;
+}
 
  if (Array.isArray(cjProduct.title)) {
  cjProduct.title = cjProduct.title.join(" ");
@@ -148,15 +196,22 @@ for (let product of processingList) {
  .trim();
 
  if (cjProduct.title.length < 5) {
- console.log("Bad CJ title after cleaning, skipping");
- continue;
- }
-
+  console.log("Bad CJ title after cleaning, skipping");
+  addMemoryRecord({
+    title: product.title,
+    status: "rejected",
+    reason: "bad_cleaned_cj_title",
+    score: product.score || 0,
+    source: "cj_product",
+    cjTitle: cjProduct.title || ""
+  });
+  continue;
+}
  console.log("CJ match found:", cjProduct.title);
  console.log("CJ image:", cjProduct.images[0]);
 
  await createShopifyProduct(cjProduct);
-
+ markCandidateTested(product.title);
  break;
  } catch (loopErr) {
  console.log("Product loop error:");
