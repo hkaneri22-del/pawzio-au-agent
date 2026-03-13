@@ -21,6 +21,7 @@ require("dotenv").config();
  const { getNextViralCandidates, markCandidateTested } = require("./viralQueue");
  const productMemory = require("./productMemory");
  const { saveWinningKeywords } = require("./winningKeywordEngine");
+ const { saveCampaignDraft } = require("./metaAdsDraft");
 
  console.log("All modules loaded successfully");
 
@@ -296,7 +297,12 @@ if (!profitCheck.pass) {
 }
 
  const created = await createShopifyProduct(cjProduct);
-
+ if (created) {
+  saveCampaignDraft({
+    title: cjProduct.title || product.title,
+    image: cjProduct.image || (cjProduct.images && cjProduct.images[0]) || ""
+  });
+}
  if (
  productMemory &&
  typeof productMemory.addMemoryRecord === "function"
