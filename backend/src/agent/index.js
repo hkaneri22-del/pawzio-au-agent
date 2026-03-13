@@ -22,6 +22,7 @@ require("dotenv").config();
  const productMemory = require("./productMemory");
  const { saveWinningKeywords } = require("./winningKeywordEngine");
  const { saveCampaignDraft } = require("./metaAdsDraft");
+ const { saveCreativeDraft } = require("./autoAdCreativeEngine");
 
  console.log("All modules loaded successfully");
 
@@ -301,6 +302,11 @@ if (!profitCheck.pass) {
   saveCampaignDraft({
     title: cjProduct.title || product.title,
     image: cjProduct.image || (cjProduct.images && cjProduct.images[0]) || ""
+  });
+    saveCreativeDraft({
+    title: cjProduct.title || product.title,
+    image: cjProduct.image || (cjProduct.images && cjProduct.images[0]) || "",
+    images: cjProduct.images || []
   });
 }
  if (
