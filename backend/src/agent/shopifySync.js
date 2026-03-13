@@ -107,7 +107,7 @@ metafields: [
       {
         price: pricing.price,
         compare_at_price: pricing.compare_at_price,
-        sku: PZ-${Date.now()},
+        sku: `PZ-${Date.now()}`,
 
         inventory_management: "shopify",
         inventory_policy: "deny"
