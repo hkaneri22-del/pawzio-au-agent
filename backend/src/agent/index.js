@@ -161,7 +161,7 @@ if (cjProduct.title.length < 5) {
  await orderManager.process();
  await reports.weekly();
  await productResearch.scanTrends(); 
- await createShopifyProduct(product);
+ await createShopifyProduct(researched[0]);
 
  }
 
