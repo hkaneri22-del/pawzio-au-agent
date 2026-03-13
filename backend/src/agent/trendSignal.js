@@ -1,25 +1,33 @@
-const googleTrends = require("google-trends-api");
+const axios = require("axios");
 
 async function getTrendScore(keyword) {
-try {
-const result = await googleTrends.interestOverTime({
-keyword: keyword,
-startTime: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-});
+ try {
+ const url = `https://trends.google.com/trends/api/dailytrends?hl=en-US&geo=US`;
 
-const data = JSON.parse(result);
-const timeline = data.default.timelineData || [];
+ const response = await axios.get(url, {
+ timeout: 5000
+ });
 
-if (timeline.length === 0) return 0;
+ if (!response.data) {
+ return 0;
+ }
 
-const values = timeline.map(p => p.value[0]);
-const avg = values.reduce((a, b) => a + b, 0) / values.length;
+ const text = JSON.stringify(response.data).toLowerCase();
 
-return avg / 100;
-} catch (err) {
-console.log("Trend check failed:", err.message);
-return 0;
+ if (text.includes(keyword.toLowerCase())) {
+ return 1;
+ }
+
+ return 0;
+
+ } catch (err) {
+
+ console.log(" Trend signal fallback:", err.message);
+
+ return 0;
+ }
 }
-}
 
-module.exports = { getTrendScore };
+module.exports = {
+ getTrendScore
+};

@@ -11,8 +11,7 @@ require("dotenv").config();
 
  // Load modules
  const productScanner = require("./productScanner");
- const shopifySync = require("./shopifySync");
- const cjIntegration = require("./cjIntegration");
+  const cjIntegration = require("./cjIntegration");
  const adsManager = require("./adsManager");
  const orderManager = require("./orderManager");
  const reports = require("./reports");
@@ -157,12 +156,12 @@ if (cjProduct.title.length < 5) {
 }
 
  // Run automation tasks
- await shopifySync.sync();
- await cjIntegration.syncOrders();
+  await cjIntegration.syncOrders();
  await adsManager.optimize();
  await orderManager.process();
  await reports.weekly();
- await productResearch.scanTrends();
+ await productResearch.scanTrends(); 
+ await createShopifyProduct(product);
 
  }
 
