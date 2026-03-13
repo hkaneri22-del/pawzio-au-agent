@@ -17,6 +17,7 @@ require("dotenv").config();
  const { scoreProduct } = require("./productScoring");
  const { createShopifyProduct } = require("./shopifySync");
  const { saveViralCandidates } = require("./viralDiscovery");
+ const { getNextViralCandidates, markCandidateTested } = require("./viralQueue");
 
  console.log("All modules loaded successfully");
 
@@ -50,8 +51,17 @@ require("dotenv").config();
  if (!shortlisted.length) {
  console.log(" No winning products found in this cycle");
  }
+ saveViralCandidates(shortlisted.slice(0, 10));
+ const queuedCandidates = getNextViralCandidates(3);
 
- for (let product of shortlisted.slice(0, 2)) {
+console.log("📦 Viral Queue Candidates:");
+console.log(queuedCandidates);
+
+ const processingList = queuedCandidates.length
+  ? queuedCandidates
+  : shortlisted.slice(0, 2);
+
+for (let product of processingList) {
  try {
  if (!product.title || product.title.length < 5) {
  console.log("Invalid product title, skipping");

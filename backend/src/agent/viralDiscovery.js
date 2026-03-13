@@ -49,6 +49,7 @@ images: product.images || [],
 score,
 matchedKeywords,
 isViralStyle,
+tested: false,
 createdAt: new Date().toISOString()
 };
 }
