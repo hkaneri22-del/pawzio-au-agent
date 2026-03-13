@@ -5,6 +5,7 @@ const { getAmazonSignal } = require("./amazonSignal");
 const { getTikTokSignal } = require("./tiktokSignal");
 const { getMetaSignal } = require("./metaSignal");
 const { getMemoryScoreAdjustment } = require("./productMemory");
+const { getWinningKeywordBoost } = require("./winningKeywordEngine");
 
 function safeNumber(value, fallback = 0) {
  const num = Number(value);
@@ -106,6 +107,8 @@ async function scoreProduct(product) {
  // Meta signal
  const meta = safeNumber(getMetaSignal(title), 0);
  score += meta * 4;
+ const winningKeyword = getWinningKeywordBoost(title);
+score += winningKeyword.boost;
  const memory = getMemoryScoreAdjustment(title);
 score += memory.adjustment;
 
@@ -119,6 +122,8 @@ score += memory.adjustment;
   amazon,
   tiktok,
   meta,
+  winningKeywordBoost: winningKeyword.boost,
+matchedWinningKeywords: winningKeyword.matchedKeywords,
   memoryBoost: memory.boost,
   memoryPenalty: memory.penalty,
   memoryAdjustment: memory.adjustment,

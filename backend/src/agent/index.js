@@ -19,6 +19,7 @@ require("dotenv").config();
  const { saveViralCandidates } = require("./viralDiscovery");
  const { getNextViralCandidates, markCandidateTested } = require("./viralQueue");
  const { hasMemory, addMemoryRecord, shouldSkipProduct } = require("./productMemory");
+ const { saveWinningKeywords } = require("./winningKeywordEngine");
 
  console.log("All modules loaded successfully");
 
@@ -53,6 +54,7 @@ require("dotenv").config();
  console.log(" No winning products found in this cycle");
  }
  saveViralCandidates(shortlisted.slice(0, 10));
+ saveWinningKeywords();
  const queuedCandidates = getNextViralCandidates(3);
 
 console.log("📦 Viral Queue Candidates:");
