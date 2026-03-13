@@ -34,17 +34,28 @@ require("dotenv").config();
 
  console.log(" Scoring pet products...");
 
- const ranked = researched
- .map(p => {
- p.score = scoreProduct(p);
- return p;
- })
- .sort((a, b) => b.score - a.score);
+ const scoredProducts = await Promise.all(
+  researched.map(async (p) => {
+    p.score = await scoreProduct(p);
+    return p;
+  })
+);
 
- console.log(" Top Pet Products:");
- console.log(ranked.slice(0, 3));
+const ranked = scoredProducts.sort((a, b) => b.score - a.score);
 
- for (let product of ranked.slice(0, 1)) {
+console.log("🏆 Top Pet Products:");
+console.log(ranked.slice(0, 3));
+
+const shortlisted = ranked.filter((p) => p.score >= 7);
+
+console.log("✅ Winning Product Shortlist:");
+console.log(shortlisted.slice(0, 5));
+
+if (!shortlisted.length) {
+  console.log("⚠️ No winning products found in this cycle");
+}
+
+ for (let product of shortlisted.slice(0, 1)) {
  try {
  if (!product.title || product.title.length < 5) {
  console.log(" Invalid product title, skipping");
