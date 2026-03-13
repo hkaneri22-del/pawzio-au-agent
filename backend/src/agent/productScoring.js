@@ -4,6 +4,7 @@ const { getTrendScore } = require("./trendSignal");
 const { getAmazonSignal } = require("./amazonSignal");
 const { getTikTokSignal } = require("./tiktokSignal");
 const { getMetaSignal } = require("./metaSignal");
+const { getMemoryScoreAdjustment } = require("./productMemory");
 
 function safeNumber(value, fallback = 0) {
  const num = Number(value);
@@ -105,19 +106,24 @@ async function scoreProduct(product) {
  // Meta signal
  const meta = safeNumber(getMetaSignal(title), 0);
  score += meta * 4;
+ const memory = getMemoryScoreAdjustment(title);
+score += memory.adjustment;
 
  // Final guard
  score = safeNumber(score, 0);
 
- console.log(" Score breakdown:", {
- title,
- basePrice: price,
- trend,
- amazon,
- tiktok,
- meta,
- finalScore: score
- });
+ console.log("Score breakdown:", {
+  title,
+  basePrice: price,
+  trend,
+  amazon,
+  tiktok,
+  meta,
+  memoryBoost: memory.boost,
+  memoryPenalty: memory.penalty,
+  memoryAdjustment: memory.adjustment,
+  finalScore: score
+});
 
  return Number(score.toFixed(2));
 }
