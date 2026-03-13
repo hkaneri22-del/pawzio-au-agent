@@ -100,7 +100,7 @@ metafields: [
     type: "single_line_text_field",
     namespace: "seo"
   }
-]
+],
     status: "draft",
 
     variants: [
