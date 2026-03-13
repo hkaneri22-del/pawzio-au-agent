@@ -16,6 +16,7 @@ require("dotenv").config();
  const productResearch = require("./productResearch");
  const { scoreProduct } = require("./productScoring");
  const { createShopifyProduct } = require("./shopifySync");
+ const { saveViralCandidates } = require("./viralDiscovery");
 
  console.log("All modules loaded successfully");
 
