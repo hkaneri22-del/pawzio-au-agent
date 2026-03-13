@@ -1,138 +1,153 @@
-console.log(" Pet Product Scoring module loaded");
+console.log("Pet Product Scoring module loaded");
 
 const { getTrendScore } = require("./trendSignal");
 const { getAmazonSignal } = require("./amazonSignal");
 const { getTikTokSignal } = require("./tiktokSignal");
 const { getMetaSignal } = require("./metaSignal");
-const { getMemoryScoreAdjustment } = require("./productMemory");
 const { getWinningKeywordBoost } = require("./winningKeywordEngine");
+const productMemory = require("./productMemory");
 
 function safeNumber(value, fallback = 0) {
- const num = Number(value);
- return Number.isFinite(num) ? num : fallback;
+const num = Number(value);
+return Number.isFinite(num) ? num : fallback;
 }
 
 async function scoreProduct(product) {
- let score = 0;
+let score = 0;
 
- const title = String(product.title || "");
- const description = String(product.description || "");
- const text = `${title} ${description}`.toLowerCase();
+const title = String(product?.title || "").trim();
+const description = String(product?.description || "").trim();
+const text = `${title} ${description}`.toLowerCase();
+const price = safeNumber(product?.price || product?.cost, 0);
 
- // Block irrelevant products
- const blockedKeywords = [
- "wooden",
- "coop",
- "cage",
- "chair",
- "table",
- "furniture",
- "cabinet",
- "decor",
- "human"
- ];
+// Block irrelevant products early
+const blockedKeywords = [
+"wooden",
+"coop",
+"cage",
+"furniture",
+"home decor",
+"sofa",
+"cabinet",
+"table",
+"chair"
+];
 
- for (const keyword of blockedKeywords) {
- if (text.includes(keyword)) {
- console.log(" Blocked product:", product.title);
- return -10;
- }
- }
+for (const kw of blockedKeywords) {
+if (text.includes(kw)) {
+console.log("Blocked product in scoring:", title, "keyword:", kw);
+return 0;
+}
+}
 
- // Winner keywords bonus
- const winnerKeywords = [
- "hair remover",
- "grooming",
- "self cleaning",
- "portable",
- "leak proof",
- "water fountain",
- "brush",
- "travel",
- "cleaner",
- "lick mat"
- ];
+// Base score from title quality
+if (title.length >= 8) score += 2;
+if (description.length >= 20) score += 1;
 
- for (const keyword of winnerKeywords) {
- if (text.includes(keyword)) {
- score += 1.5;
- }
- }
+// Price logic
+if (price > 0 && price <= 50) score += 1;
+if (price >= 10 && price <= 35) score += 1.5;
 
- // Bad title / image penalty
- if (!title || title.length < 8) {
- score -= 3;
- }
+// Trend signal
+let trend = 0;
+try {
+trend = safeNumber(await getTrendScore(title), 0);
+} catch (err) {
+console.log("Trend signal fallback:", err.message);
+trend = 0;
+}
+score += trend * 5;
 
- if (!product.images || !product.images.length) {
- score -= 4;
- }
+// Amazon signal
+let amazon = 0;
+try {
+amazon = safeNumber(getAmazonSignal(title), 0);
+} catch (err) {
+console.log("Amazon signal fallback:", err.message);
+amazon = 0;
+}
+score += amazon * 3;
 
- // Price sweet spot
- const price = safeNumber(product.price, 0);
- if (price >= 10 && price <= 35) {
- score += 2;
- } else if (price > 35 && price <= 60) {
- score += 1;
- } else if (price > 60) {
- score -= 2;
- }
+// TikTok signal
+let tiktok = 0;
+try {
+tiktok = safeNumber(getTikTokSignal(title), 0);
+} catch (err) {
+console.log("TikTok signal fallback:", err.message);
+tiktok = 0;
+}
+score += tiktok * 4;
 
- // Core scoring
- score += safeNumber(product.demand) * 0.25;
- score += safeNumber(product.margin) * 0.20;
- score += (10 - safeNumber(product.competition)) * 0.15;
- score += safeNumber(product.reviews) * 0.10;
- score += (10 - safeNumber(product.refundRisk)) * 0.10;
- score += safeNumber(product.shipping) * 0.10;
- score += safeNumber(product.petFit) * 0.10;
+// Meta signal
+let meta = 0;
+try {
+meta = safeNumber(getMetaSignal(title), 0);
+} catch (err) {
+console.log("Meta signal fallback:", err.message);
+meta = 0;
+}
+score += meta * 4;
 
- // Trend signal
- let trend = 0;
- try {
- trend = safeNumber(await getTrendScore(title), 0);
- } catch (err) {
- console.log(" Trend score failed:", err.message);
- }
- score += trend * 5;
+// Winning keyword boost
+let winningKeyword = { boost: 0, matchedKeywords: [] };
+try {
+winningKeyword = getWinningKeywordBoost(title) || {
+boost: 0,
+matchedKeywords: []
+};
+} catch (err) {
+console.log("Winning keyword fallback:", err.message);
+winningKeyword = { boost: 0, matchedKeywords: [] };
+}
+score += safeNumber(winningKeyword.boost, 0);
 
- // Amazon signal
- const amazon = safeNumber(getAmazonSignal(title), 0);
- score += amazon * 3;
+// Memory-aware scoring (SAFE)
+let memory = {
+boost: 0,
+penalty: 0,
+adjustment: 0,
+successfulPatternHits: 0,
+rejectedPatternHits: 0,
+blockedPatternHits: 0
+};
 
- // TikTok signal
- const tiktok = safeNumber(getTikTokSignal(title), 0);
- score += tiktok * 4;
+try {
+if (
+productMemory &&
+typeof productMemory.getMemoryScoreAdjustment === "function"
+) {
+memory = productMemory.getMemoryScoreAdjustment(title) || memory;
+score += safeNumber(memory.adjustment, 0);
+} else {
+console.log("Memory scoring skipped: getMemoryScoreAdjustment not available");
+}
+} catch (err) {
+console.log("Memory scoring fallback:", err.message);
+}
 
- // Meta signal
- const meta = safeNumber(getMetaSignal(title), 0);
- score += meta * 4;
- const winningKeyword = getWinningKeywordBoost(title);
-score += winningKeyword.boost;
- const memory = getMemoryScoreAdjustment(title);
-score += memory.adjustment;
+score = safeNumber(score, 0);
 
- // Final guard
- score = safeNumber(score, 0);
-
- console.log("Score breakdown:", {
-  title,
-  basePrice: price,
-  trend,
-  amazon,
-  tiktok,
-  meta,
-  winningKeywordBoost: winningKeyword.boost,
+console.log("Score breakdown:", {
+title,
+basePrice: price,
+trend,
+amazon,
+tiktok,
+meta,
+winningKeywordBoost: winningKeyword.boost,
 matchedWinningKeywords: winningKeyword.matchedKeywords,
-  memoryBoost: memory.boost,
-  memoryPenalty: memory.penalty,
-  memoryAdjustment: memory.adjustment,
-  finalScore: score
+memoryBoost: memory.boost,
+memoryPenalty: memory.penalty,
+memoryAdjustment: memory.adjustment,
+successfulPatternHits: memory.successfulPatternHits,
+rejectedPatternHits: memory.rejectedPatternHits,
+blockedPatternHits: memory.blockedPatternHits,
+finalScore: Number(score.toFixed(2))
 });
 
- return Number(score.toFixed(2));
+return Number(score.toFixed(2));
 }
 
 module.exports = {
- scoreProduct
+scoreProduct
 };
