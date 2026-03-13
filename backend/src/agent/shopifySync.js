@@ -1,4 +1,6 @@
 const axios = require("axios");
+const { calculatePrice } = require("./pricingEngine");
+const { generateLanding } = require("./landingGenerator");
 async function productExistsInShopify(title) {
 try {
 const cleanTitle = String(product.title || "").trim();
@@ -78,23 +80,43 @@ product.images && product.images.length
 ? [{ src: product.images[0] }]
 : [];
 
-const payload = {
-product: {
-title: cleanTitle || "AI Pet Product",
-body_html: `<strong>${product.description || "Best pet product for your pet!"}</strong>`,
-vendor: product.vendor || "Pawzio",
-product_type: product.product_type || "Pet Supplies",
-tags: "AI_IMPORTED,CJ_PRODUCT,REVIEW_PENDING",
-status: "draft",
-variants: [
-{
-price: product.price || "19.99"
-}
-],
-images: imageArray
-}
-};
+const pricing = calculatePrice(product.price || 5);
 
+const landingHTML = generateLanding(product);
+
+const payload = {
+  product: {
+    title: cleanTitle || "AI Pet Product",
+    body_html: landingHTML,
+
+    vendor: "Pawzio",
+    product_type: "Pet Product",
+
+    tags: "AI_IMPORTED,PAWZIO,WINNING_PRODUCT",
+metafields: [
+  {
+    key: "seo_title",
+    value: product.title,
+    type: "single_line_text_field",
+    namespace: "seo"
+  }
+]
+    status: "draft",
+
+    variants: [
+      {
+        price: pricing.price,
+        compare_at_price: pricing.compare_at_price,
+        sku: PZ-${Date.now()},
+
+        inventory_management: "shopify",
+        inventory_policy: "deny"
+      }
+    ],
+
+    images: imageArray
+  }
+};
 const response = await axios.post(
 `https://${SHOPIFY_STORE}/admin/api/2023-10/products.json`,
 payload,
