@@ -103,9 +103,14 @@ require("dotenv").config();
  console.log("Trying CJ match for:", product.title);
 
  const cjRaw = await cjIntegration.searchCJProductByKeyword(product.title);
+ if (!cjRaw) {
+  console.log("CJ search returned no product, skipping:", product.title);
+  continue;
+}
 
  if (!cjRaw) {
  console.log("No CJ match, skipping:", product.title);
+ 
 
  if (
  productMemory &&
