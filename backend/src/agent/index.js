@@ -103,6 +103,7 @@ require("dotenv").config();
  console.log("Trying CJ match for:", product.title);
 
  const cjRaw = await cjIntegration.searchCJProductByKeyword(product.title);
+ await new Promise(resolve => setTimeout(resolve, 1200));
  if (!cjRaw) {
   console.log("CJ search returned no product, skipping:", product.title);
   continue;
@@ -406,7 +407,7 @@ if (!profitCheck.pass) {
  } catch (loopErr) {
  console.error("ERROR inside main loop:", loopErr);
  }
- }, 60000);
+ }, 1800000);
  } catch (err) {
  console.error("FATAL STARTUP ERROR:", err);
  }
