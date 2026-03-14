@@ -128,7 +128,26 @@ require("dotenv").config();
  continue;
  }
 
- Product = cjIntegration.normalizeCJProduct(cjRaw);
+const cjCandidates = Array.isArray(cjRaw) ? cjRaw : [cjRaw];
+
+const normalizedCandidates = cjCandidates
+  .map((item) => {
+    try {
+      return cjIntegration.normalizeCJProduct(item);
+    } catch (err) {
+      return null;
+    }
+  })
+  .filter(Boolean);
+
+const cjProduct = pickBestCJProduct(product.title, normalizedCandidates);
+
+if (!cjProduct) {
+  console.log("No strong CJ product selected, skipping:", product.title);
+  continue;
+}
+
+console.log("CJ selector chose:", cjProduct.title);
 
  if (!cjProduct || !cjProduct.title) {
  console.log("Invalid CJ product, skipping");
