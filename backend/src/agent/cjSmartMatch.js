@@ -1,59 +1,69 @@
 function normalize(text) {
-  return (text || "")
-    .toLowerCase()
-    .replace(/[^a-z0-9 ]/g, "")
-    .split(" ")
-    .filter(Boolean);
+ return String(text || "")
+ .toLowerCase()
+ .replace(/[^a-z0-9 ]/g, "")
+ .split(" ")
+ .filter(Boolean);
 }
 
 function scoreMatch(shopifyTitle, cjTitle) {
-  const shopifyWords = normalize(shopifyTitle);
-  const cjWords = normalize(cjTitle);
+ const shopifyWords = normalize(shopifyTitle);
+ const cjWords = normalize(cjTitle);
 
-  let matches = 0;
+ if (!shopifyWords.length) return 0;
 
-  shopifyWords.forEach(word => {
-    if (cjWords.includes(word)) {
-      matches++;
-    }
-  });
+ let matches = 0;
 
-  const score = matches / shopifyWords.length;
+ shopifyWords.forEach((word) => {
+ if (cjWords.includes(word)) {
+ matches++;
+ }
+ });
 
-  return score;
+ return matches / shopifyWords.length;
 }
 
 function isGoodCJMatch(shopifyTitle, cjTitle) {
+ const shopifyLower = String(shopifyTitle || "").toLowerCase();
+ const cjLower = String(cjTitle || "").toLowerCase();
+
  const strongKeywords = [
-  "sofa",
-  "seat",
-  "bed",
-  "fountain",
-  "collar",
-  "feeder",
-  "litter",
-  "scratcher",
-  "toy"
-];
-  const importantMatch = strongKeywords.some(word =>
-  shopifyTitle.toLowerCase().includes(word) &&
-  cjTitle.toLowerCase().includes(word)
-);
+ "sofa",
+ "bed",
+ "fountain",
+ "collar",
+ "feeder",
+ "Seat",
+ "litter",
+ "scratcher",
+ "toy",
+ "brush",
+ "grooming",
+ "cleaner",
+ "remover",
+ "carrier",
+ "bowl"
+ ];
 
-if (importantMatch) {
-  return {
-    score: 1,
-    good: true
-  };
-}
-  const score = scoreMatch(shopifyTitle, cjTitle);
+ const importantMatch = strongKeywords.some((word) =>
+ shopifyLower.includes(word) && cjLower.includes(word)
+ );
 
-  return {
-    score,
-    good: score >= 0.25
-  };
+ if (importantMatch) {
+ return {
+ score: 1,
+ good: true
+ };
+ }
+
+ const score = scoreMatch(shopifyTitle, cjTitle);
+
+ return {
+ score,
+ good: score >= 0.25
+ };
 }
 
 module.exports = {
-  isGoodCJMatch
+ isGoodCJMatch
 };
