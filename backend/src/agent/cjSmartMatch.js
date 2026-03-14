@@ -24,11 +24,33 @@ function scoreMatch(shopifyTitle, cjTitle) {
 }
 
 function isGoodCJMatch(shopifyTitle, cjTitle) {
+ const strongKeywords = [
+  "sofa",
+  "seat",
+  "bed",
+  "fountain",
+  "collar",
+  "feeder",
+  "litter",
+  "scratcher",
+  "toy"
+];
+  const importantMatch = strongKeywords.some(word =>
+  shopifyTitle.toLowerCase().includes(word) &&
+  cjTitle.toLowerCase().includes(word)
+);
+
+if (importantMatch) {
+  return {
+    score: 1,
+    good: true
+  };
+}
   const score = scoreMatch(shopifyTitle, cjTitle);
 
   return {
     score,
-    good: score >= 0.4
+    good: score >= 0.25
   };
 }
 
