@@ -97,7 +97,7 @@ require("dotenv").config();
  source: "shortlist"
  });
  }
-
+ markCandidateTested(product.title);
  continue;
  }
 
@@ -126,7 +126,7 @@ require("dotenv").config();
  source: "cj_search"
  });
  }
-
+ markCandidateTested(product.title);
  continue;
  }
 
@@ -166,7 +166,7 @@ console.log("CJ selector chose:", cjProduct.title);
  source: "cj_normalize"
  });
  }
-
+ markCandidateTested(product.title);
  continue;
  }
 
@@ -186,7 +186,7 @@ console.log("CJ selector chose:", cjProduct.title);
  cjTitle: cjProduct.title || ""
  });
  }
-
+ markCandidateTested(product.title);
  continue;
  }
 
@@ -231,24 +231,24 @@ console.log("CJ selector chose:", cjProduct.title);
  );
 
  if (hasBlockedKeyword) {
- console.log("Blocked CJ product, skipping:", cjProduct.title);
+console.log("Blocked CJ product, skipping:", cjProduct.title);
 
- if (
- productMemory &&
- typeof productMemory.addMemoryRecord === "function"
- ) {
- productMemory.addMemoryRecord({
- title: product.title,
- status: "rejected",
- reason: "blocked_keyword",
- score: product.score || 0,
- source: "cj_product",
- cjTitle: cjProduct.title || ""
- });
- }
+if (
+  productMemory &&
+  typeof productMemory.addMemoryRecord === "function"
+) {
+  productMemory.addMemoryRecord({
+    title: product.title,
+    status: "rejected",
+    reason: "blocked_keyword",
+    score: product.score || 0,
+    source: "cj_product",
+    cjTitle: cjProduct.title || ""
+  });
+}
 
- continue;
- }
+markCandidateTested(product.title);
+continue; }
 
  if (!hasAllowedKeyword) {
  console.log("Non-pet / weak-match CJ product, skipping:", cjProduct.title);
@@ -294,7 +294,7 @@ console.log("CJ selector chose:", cjProduct.title);
  cjTitle: cjProduct.title || ""
  });
  }
-
+ markCandidateTested(product.title);
  continue;
  }
 
@@ -320,7 +320,7 @@ if (!match.good) {
       cjTitle: cjProduct.title || ""
     });
   }
-
+ markCandidateTested(product.title);
   continue;
 }
  const profitCheck = isProfitable(cjProduct);
@@ -343,7 +343,7 @@ if (!profitCheck.pass) {
       cjTitle: cjProduct.title || ""
     });
   }
-
+  markCandidateTested(product.title);
   continue;
 }
 
@@ -379,23 +379,28 @@ if (!profitCheck.pass) {
  if (created) {
  break;
  }
- } catch (loopErr) {
- console.log("Product loop error:");
- console.log(loopErr.message);
+} catch (loopErr) {
+  console.log("Product loop error:");
+  console.log(loopErr.message);
 
- if (
- productMemory &&
- typeof productMemory.addMemoryRecord === "function"
- ) {
- productMemory.addMemoryRecord({
- title: product?.title || "",
- status: "rejected",
- reason: loopErr.message || "product_loop_error",
- score: product?.score || 0,
- source: "loop_error"
- });
- }
- }
+  if (
+    productMemory &&
+    typeof productMemory.addMemoryRecord === "function"
+  ) {
+    productMemory.addMemoryRecord({
+      title: product?.title || "",
+      status: "rejected",
+      reason: loopErr.message || "product_loop_error",
+      score: product?.score || 0,
+      source: "loop_error"
+    });
+  }
+
+ 
+  if (product?.title) {
+    markCandidateTested(product.title);
+  }
+}
  }
  }
 
