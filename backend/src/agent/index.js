@@ -408,7 +408,7 @@ if (!profitCheck.pass) {
  } catch (loopErr) {
  console.error("ERROR inside main loop:", loopErr);
  }
- }, 1800000);
+ }, 60000);
  } catch (err) {
  console.error("FATAL STARTUP ERROR:", err);
  }
