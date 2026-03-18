@@ -24,6 +24,7 @@ require("dotenv").config();
  const { saveCampaignDraft } = require("./metaAdsDraft");
  const { saveCreativeDraft } = require("./autoAdCreativeEngine");
  const { isGoodCJMatch } = require("./cjSmartMatch");
+ const { pickBestCJProduct } = require("./cjSmartSelector");
 
  console.log("All modules loaded successfully");
 
