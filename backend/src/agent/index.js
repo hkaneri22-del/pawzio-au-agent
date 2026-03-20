@@ -82,7 +82,7 @@ saveViralCandidates(freshShortlisted.slice(0, 10));
 
  const processingList = queuedCandidates.length
  ? queuedCandidates
- : shortlisted.slice(0, 2);
+ : freshShortlisted.slice(0, 2);
 
  for (let product of processingList) {
  try {
