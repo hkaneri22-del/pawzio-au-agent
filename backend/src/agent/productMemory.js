@@ -80,7 +80,29 @@ writeMemory(memory);
 }
 
 function shouldSkipProduct(title) {
-const record = getMemoryRecord(title);
+  if (!title) return false;
+
+  const records = readMemory(); // existing function
+
+  const normalizedTitle = String(title).trim().toLowerCase();
+
+  const match = records.find(
+    (r) => String(r.title).trim().toLowerCase() === normalizedTitle
+  );
+
+  if (!match) return false;
+
+  // ✅ MAIN LOGIC
+  // once rejected OR created → never use again
+  if (
+    match.status === "rejected" ||
+    match.status === "shopify_created"
+  ) {
+    return true;
+  }
+
+  return false;
+}const record = getMemoryRecord(title);
 
 if (!record) return false;
 
