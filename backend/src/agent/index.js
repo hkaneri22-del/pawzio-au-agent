@@ -138,23 +138,6 @@ saveViralCandidates(freshShortlisted.slice(0, 10));
   continue;
 }
 
-
- if (
- productMemory &&
- typeof productMemory.addMemoryRecord === "function"
- ) {
- productMemory.addMemoryRecord({
- title: product.title,
- status: "rejected",
- reason: "no_cj_match",
- score: product.score || 0,
- source: "cj_search"
- });
- }
- markCandidateTested(product.title);
- continue;
- }
-
 const cjCandidates = Array.isArray(cjRaw) ? cjRaw : [cjRaw];
 
 const normalizedCandidates = cjCandidates
