@@ -120,12 +120,24 @@ saveViralCandidates(freshShortlisted.slice(0, 10));
  await new Promise(resolve => setTimeout(resolve, 1200));
  if (!cjRaw) {
   console.log("CJ search returned no product, skipping:", product.title);
+
+  if (
+    productMemory &&
+    typeof productMemory.addMemoryRecord === "function"
+  ) {
+    productMemory.addMemoryRecord({
+      title: product.title,
+      status: "rejected",
+      reason: "cj_search_empty",
+      score: product.score || 0,
+      source: "cj_search"
+    });
+  }
+
+  markCandidateTested(product.title);
   continue;
 }
 
- if (!cjRaw) {
- console.log("No CJ match, skipping:", product.title);
- 
 
  if (
  productMemory &&
@@ -159,9 +171,23 @@ const cjProduct = pickBestCJProduct(product.title, normalizedCandidates);
 
 if (!cjProduct) {
   console.log("No strong CJ product selected, skipping:", product.title);
+
+  if (
+    productMemory &&
+    typeof productMemory.addMemoryRecord === "function"
+  ) {
+    productMemory.addMemoryRecord({
+      title: product.title,
+      status: "rejected",
+      reason: "no_strong_cj_product",
+      score: product.score || 0,
+      source: "cj_selector"
+    });
+  }
+
+  markCandidateTested(product.title);
   continue;
 }
-
 console.log("CJ selector chose:", cjProduct.title);
 
  if (!cjProduct || !cjProduct.title) {
@@ -264,24 +290,25 @@ markCandidateTested(product.title);
 continue; }
 
  if (!hasAllowedKeyword) {
- console.log("Non-pet / weak-match CJ product, skipping:", cjProduct.title);
+  console.log("Non-pet / weak-match CJ product, skipping:", cjProduct.title);
 
- if (
- productMemory &&
- typeof productMemory.addMemoryRecord === "function"
- ) {
- productMemory.addMemoryRecord({
- title: product.title,
- status: "rejected",
- reason: "weak_pet_match",
- score: product.score || 0,
- source: "cj_product",
- cjTitle: cjProduct.title || ""
- });
- }
+  if (
+    productMemory &&
+    typeof productMemory.addMemoryRecord === "function"
+  ) {
+    productMemory.addMemoryRecord({
+      title: product.title,
+      status: "rejected",
+      reason: "weak_pet_match",
+      score: product.score || 0,
+      source: "cj_product",
+      cjTitle: cjProduct.title || ""
+    });
+  }
 
- continue;
- }
+  markCandidateTested(product.title);
+  continue;
+}
 
  if (Array.isArray(cjProduct.title)) {
  cjProduct.title = cjProduct.title.join(" ");
