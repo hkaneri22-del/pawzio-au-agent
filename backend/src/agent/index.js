@@ -59,7 +59,20 @@ require("dotenv").config();
  console.log(" No winning products found in this cycle");
  }
 
- saveViralCandidates(shortlisted.slice(0, 10));
+ const freshShortlisted = shortlisted.filter((p) => {
+  if (
+    productMemory &&
+    typeof productMemory.shouldSkipProduct === "function"
+  ) {
+    return !productMemory.shouldSkipProduct(p.title);
+  }
+  return true;
+});
+
+console.log("Fresh shortlist after memory filter:");
+console.log(freshShortlisted);
+
+saveViralCandidates(freshShortlisted.slice(0, 10));
  saveWinningKeywords();
 
  const queuedCandidates = getNextViralCandidates(3);
