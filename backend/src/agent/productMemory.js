@@ -101,8 +101,7 @@ function shouldSkipProduct(title) {
     return true;
   }
 
-  return false;
-}const record = getMemoryRecord(title);
+const record = getMemoryRecord(title);
 
 if (!record) return false;
 
