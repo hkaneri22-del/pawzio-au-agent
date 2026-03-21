@@ -1,5 +1,10 @@
 console.log("📦 ProductScanner module loaded");
 
+const fs = require("fs");
+const path = require("path");
+
+const stateFile = path.join(__dirname, "scannerState.json");
+
 const keywordPools = [
 [
 {
@@ -107,17 +112,45 @@ images: [
 ]
 ];
 
-let currentPoolIndex = 0;
+function readState() {
+try {
+if (!fs.existsSync(stateFile)) {
+return { lastPoolIndex: -1 };
+}
+const raw = fs.readFileSync(stateFile, "utf8");
+const parsed = JSON.parse(raw);
+return {
+lastPoolIndex:
+typeof parsed.lastPoolIndex === "number" ? parsed.lastPoolIndex : -1
+};
+} catch (err) {
+console.log("Scanner state read failed:", err.message);
+return { lastPoolIndex: -1 };
+}
+}
+
+function writeState(state) {
+try {
+fs.writeFileSync(stateFile, JSON.stringify(state, null, 2), "utf8");
+} catch (err) {
+console.log("Scanner state write failed:", err.message);
+}
+}
 
 async function scan() {
 console.log("🔍 Product scan running...");
 
-const products = keywordPools[currentPoolIndex];
-console.log("🔑 Scanner pool index:", currentPoolIndex);
+const state = readState();
+const nextPoolIndex = (state.lastPoolIndex + 1) % keywordPools.length;
 
-currentPoolIndex = (currentPoolIndex + 1) % keywordPools.length;
+console.log("🔑 Scanner pool index:", nextPoolIndex);
 
-return products;
+writeState({
+lastPoolIndex: nextPoolIndex,
+updatedAt: new Date().toISOString()
+});
+
+return keywordPools[nextPoolIndex];
 }
 
 module.exports = {
