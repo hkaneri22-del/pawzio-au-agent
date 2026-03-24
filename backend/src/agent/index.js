@@ -419,9 +419,9 @@ if (!match.good) {
 };
 
 console.log("✅ Supplier product ready:", supplierProduct.title);
- const created = await createShopifyProduct(supplierProduct);
+ const trendCreated = await createShopifyProduct(supplierProduct);
 
-if (created) {
+if (trendCreated) {
   saveCampaignDraft({
     title: supplierProduct.title || product.title,
     image:
