@@ -354,7 +354,7 @@ if (!match.good) {
   });
     saveCreativeDraft({
     title: supplierProduct.title || product.title,
-    image: supplierProduct.image || (supplierProduct.images && supplierProduct.images[0]) || "",
+    image: supplierProduct.image || (supplierProduct.images && supplierProduct.images[0]) |s| "",
     images: supplierProduct.images || []
   });
 }
@@ -412,7 +412,7 @@ if (!match.good) {
  } catch (loopErr) {
  console.error("ERROR inside main loop:", loopErr);
  }
- }, 1800000);
+ }, 60000);
  } catch (err) {
  console.error("FATAL STARTUP ERROR:", err);
  }
