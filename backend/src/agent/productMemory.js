@@ -92,9 +92,6 @@ function shouldSkipProduct(title) {
 
   if (!match) return false;
 
-     return false;
-  }
-
 const record = getMemoryRecord(title);
 
 if (!record) return false;
