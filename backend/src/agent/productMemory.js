@@ -92,13 +92,8 @@ function shouldSkipProduct(title) {
 
   if (!match) return false;
 
-  // ✅ MAIN LOGIC
-  // once rejected OR created → never use again
-  if (
-    match.status === "rejected" ||
-    match.status === "shopify_created"
-  ) {
-    return true;
+ // TEMP TEST MODE
+    return false;
   }
 
 const record = getMemoryRecord(title);
