@@ -126,7 +126,30 @@ saveViralCandidates(freshShortlisted.slice(0, 10));
  markCandidateTested(product.title);
  continue;
  }
+ // 🔥 CREATE SHOPIFY DRAFT WITHOUT CJ
+console.log("🛒 Creating Shopify draft (trend-based)...");
 
+const created = await createShopifyProduct({
+  title: product.title,
+  description: product.description,
+  price: product.price,
+  images: product.images || []
+});
+
+if (created) {
+  console.log("✅ Shopify draft created (trend mode)");
+
+  saveCampaignDraft({
+    title: product.title,
+    image: (product.images && product.images[0]) || ""
+  });
+
+  saveCreativeDraft({
+    title: product.title,
+    image: (product.images && product.images[0]) || "",
+    images: product.images || []
+  });
+}
  console.log("Trying CJ match for:", product.title);
 
  const cjRaw = await cjIntegration.searchCJProductByKeyword(product.title);
@@ -169,25 +192,19 @@ console.log(
 const cjProduct = pickBestCJProduct(product.title, normalizedCandidates);
 
 if (!cjProduct) {
-  console.log("No strong CJ product selected, skipping:", product.title);
+  console.log("⚠️ No CJ supplier found, saving as external sourcing product");
 
-  if (
-    productMemory &&
-    typeof productMemory.addMemoryRecord === "function"
-  ) {
+  if (productMemory && productMemory.addMemoryRecord) {
     productMemory.addMemoryRecord({
       title: product.title,
-      status: "rejected",
-      reason: "no_strong_cj_product",
-      score: product.score || 0,
-      source: "cj_selector"
+      status: "no_supplier",
+      reason: "cj_not_found",
+      source: "supplier"
     });
   }
 
-  markCandidateTested(product.title);
   continue;
-}
-console.log("CJ selector chose:", cjProduct.title);
+}console.log("CJ selector chose:", cjProduct.title);
 console.log("🔍 CJ candidates selected title:", cjProduct.title);
 
 const requiredPetWords = ["pet", "dog", "cat"];
