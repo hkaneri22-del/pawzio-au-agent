@@ -63,7 +63,7 @@ async function scanTrends() {
       .split(" ")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" "),
-    description: Trending pet product detected for keyword: ${keyword},
+    description: `Trending pet product detected for keyword: ${keyword}`,
     trendSource: "Dynamic Trend Scanner",
     trendKeyword: keyword,
     trendScore: 7,
