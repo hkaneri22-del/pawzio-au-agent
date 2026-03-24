@@ -39,25 +39,26 @@ function getAmazonSearchLink(product) {
 
 async function enrichProduct(product) {
   try {
-    if (!product || !product.title) return product;
+if (!product || !product.title) return product;
 
-    const query = encodeURIComponent(
-      String(product.trendKeyword || product.title).trim()
-    );
-    const url = https://www.amazon.com/s?k=${query};
+const query = encodeURIComponent(
+String(product.trendKeyword || product.title).trim()
+);
 
-    console.log("🔍 Enrichment search:", product.title);
+const url = `https://www.amazon.com/s?k=${query}`;
 
-    const { data } = await axios.get(url, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Accept-Language": "en-US,en;q=0.9"
-      },
-      timeout: 15000
-    });
+console.log("🔍 Enrichment search:", product.title);
 
-    const $ = cheerio.load(data);
+const { data } = await axios.get(url, {
+headers: {
+"User-Agent":
+"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+"Accept-Language": "en-US,en;q=0.9"
+},
+timeout: 15000
+});
+
+const $ = cheerio.load(data);
 
     const firstImage =
       $("img.s-image").first().attr("src") ||
