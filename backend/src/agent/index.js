@@ -24,6 +24,8 @@ require("dotenv").config();
  const { saveCreativeDraft } = require("./autoAdCreativeEngine");
  const { isGoodCJMatch } = require("./cjSmartMatch");
  const { pickBestCJProduct } = require("./cjSmartSelector");
+ const { scanTrends } = require("./trendScanner");
+ const { checkMetaAdProof } = require("./adProofEngine");
 
  console.log("All modules loaded successfully");
 
@@ -32,13 +34,25 @@ require("dotenv").config();
  try {
  console.log("Heartbeat - running AI tasks...");
 
- const researched = await productScanner.scan();
+ const researched = await scanTrends();
 
  if (researched && researched.length) {
+  const proofedProducts = researched.map((p) => {
+    const proof = checkMetaAdProof(p);
+    return {
+      ...p,
+      adProof: proof,
+      proofStatus: proof.found ? "validated" : "weak"
+    };
+  });
+
+  console.log("📣 Products after Meta Ad Proof:");
+  console.log(proofedProducts);
+
  console.log("Scoring pet products...");
 
  const scoredProducts = await Promise.all(
- researched.map(async (p) => {
+ proofedProducts.map(async (p) => {
  p.score = await scoreProduct(p);
  return p;
  })
