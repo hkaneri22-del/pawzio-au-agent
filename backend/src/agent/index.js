@@ -129,14 +129,14 @@ saveViralCandidates(freshShortlisted.slice(0, 10));
  // 🔥 CREATE SHOPIFY DRAFT WITHOUT CJ
 console.log("🛒 Creating Shopify draft (trend-based)...");
 
-const trendCreated = await createShopifyProduct({
+const shopifyResult = await createShopifyProduct({
   title: product.title,
   description: product.description,
   price: product.price,
   images: product.images || []
 });
 
-if (trendCreated && trendCreated.success) {
+if (shopifyResult && shopifyResult.success) {
   console.log("✅ Shopify draft created (trend mode)");
   console.log("Shopify result:", trendCreated);
 
