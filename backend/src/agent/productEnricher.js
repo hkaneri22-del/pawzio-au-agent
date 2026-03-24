@@ -84,13 +84,23 @@ const link =
 "https://www.amazon.com" +
 (firstItem.find("a").attr("href") || "");
 
-return {
-...product,
-images: image ? [image] : [],
-supplierLink: link || getAmazonSearchLink(product),
-supplierStatus: link ? "found" : "fallback"
-};
+let finalImages = image ? [image] : [];
 
+// 👉 AI fallback (IMPORTANT)
+if (!finalImages.length) {
+  const aiImage = await generateAIImage(product);
+  if (aiImage) {
+    finalImages = [aiImage];
+    console.log("🧠 AI image used");
+  }
+}
+
+return {
+  ...product,
+  images: finalImages,
+  supplierLink: link || getAmazonSearchLink(product),
+  supplierStatus: link ? "found" : "fallback"
+};
 } catch (err) {
     console.log("❌ Enrichment failed:", err.message);
 
