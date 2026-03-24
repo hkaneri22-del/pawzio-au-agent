@@ -34,7 +34,7 @@ function getAmazonSearchLink(product) {
   const query = encodeURIComponent(
     String(product?.trendKeyword || product?.title || "").trim()
   );
-  return query ? https://www.amazon.com/s?k=${query} : null;
+  return query ? `https://www.amazon.com/s?k=${query}` : null;
 }
 
 async function enrichProduct(product) {
