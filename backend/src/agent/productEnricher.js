@@ -1,5 +1,20 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
+function getAmazonSearchLink(product) {
+try {
+const query = encodeURIComponent(
+String(product?.trendKeyword || product?.title || "").trim()
+);
+
+return query
+? `https://www.amazon.com/s?k=${query}`
+: null;
+
+} catch (err) {
+console.log("❌ Amazon link error:", err.message);
+return null;
+}
+}
 
 // 🔁 Fallback images (jab scraping fail ho)
 const fallbackImages = {
