@@ -90,57 +90,47 @@ async function createShopifyProduct(product) {
 
  const pricing = calculatePrice(product.cost || product.price || 0);
 
- const supplierHTML = product.supplierLink
-? `<div style="margin-top:20px;">
+const supplierHTML = product.supplierLink
+  ? `<div style="margin-top:20px;">
 <a href="${product.supplierLink}" target="_blank"
 style="background:#000;color:#fff;padding:10px 15px;text-decoration:none;border-radius:5px;">
 🔗 View Supplier
 </a>
 </div>`
-: "";
+  : "";
 
- const imageArray =
- product.images && product.images.length
- ? [{ src: product.images[0] }]
- : [];
+const landingHTML = generateLanding(product);
 
+const validImage =
+  Array.isArray(product.images) &&
+  product.images.length &&
+  typeof product.images[0] === "string" &&
+  product.images[0].startsWith("http")
+    ? product.images[0]
+    : "";
 
+const imageArray = validImage ? [{ src: validImage }] : [];
 
- const payload = {
- product: {
- title: cleanTitle,
- body_html: landingHTML + supplierHTML,
- vendor: product.vendor || "Pawzio",
- product_type: product.product_type || "Pet Supplies",
- tags: "AI_IMPORTED,CJ_PRODUCT,REVIEW_PENDING",
- status: "draft",
-
- variants: [
- {
- price: pricing.price,
- compare_at_price: pricing.compare_at_price,
- sku: `PZ-${Date.now()}`,
- inventory_management: "shopify",
- inventory_policy: "deny",
- },
- ],
-
- images: imageArray,
- },
- };
-
-
-
- const response = await axios.post(
- `https://${SHOPIFY_STORE}/admin/api/2023-10/products.json`,
- payload,
- {
- headers: {
- "X-Shopify-Access-Token": SHOPIFY_TOKEN,
- "Content-Type": "application/json",
- },
- }
- );
+const payload = {
+  product: {
+    title: cleanTitle,
+    body_html: landingHTML + supplierHTML,
+    vendor: product.vendor || "Pawzio",
+    product_type: product.product_type || "Pet Supplies",
+    tags: "AI_IMPORTED,CJ_PRODUCT,REVIEW_PENDING",
+    status: "draft",
+    variants: [
+      {
+        price: pricing.price,
+        compare_at_price: pricing.compare_at_price,
+        sku: PZ-${Date.now()},
+        inventory_management: "shopify",
+        inventory_policy: "deny",
+      },
+    ],
+    images: imageArray,
+  },
+};
 
 
 
