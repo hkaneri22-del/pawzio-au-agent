@@ -1,69 +1,81 @@
 function normalize(text) {
- return String(text || "")
- .toLowerCase()
- .replace(/[^a-z0-9 ]/g, "")
- .split(" ")
- .filter(Boolean);
+  return String(text || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, " ")
+    .split(" ")
+    .filter(Boolean);
 }
 
 function scoreMatch(shopifyTitle, cjTitle) {
- const shopifyWords = normalize(shopifyTitle);
- const cjWords = normalize(cjTitle);
+  const shopifyWords = normalize(shopifyTitle);
+  const cjWords = normalize(cjTitle);
 
- if (!shopifyWords.length) return 0;
+  if (!shopifyWords.length) return 0;
 
- let matches = 0;
+  let matches = 0;
 
- shopifyWords.forEach((word) => {
- if (cjWords.includes(word)) {
- matches++;
- }
- });
+  shopifyWords.forEach((word) => {
+    if (cjWords.includes(word)) {
+      matches++;
+    }
+  });
 
- return matches / shopifyWords.length;
+  return matches / shopifyWords.length;
+}
+
+function countImportantMatches(shopifyTitle, cjTitle) {
+  const shopifyLower = String(shopifyTitle || "").toLowerCase();
+  const cjLower = String(cjTitle || "").toLowerCase();
+
+  const strongKeywords = [
+    "bed",
+    "fountain",
+    "collar",
+    "feeder",
+    "seat",
+    "litter",
+    "scratcher",
+    "toy",
+    "brush",
+    "grooming",
+    "cleaner",
+    "remover",
+    "carrier",
+    "bowl",
+    "leash",
+    "harness"
+  ];
+
+  let count = 0;
+
+  strongKeywords.forEach((word) => {
+    if (shopifyLower.includes(word) && cjLower.includes(word)) {
+      count++;
+    }
+  });
+
+  return count;
 }
 
 function isGoodCJMatch(shopifyTitle, cjTitle) {
- const shopifyLower = String(shopifyTitle || "").toLowerCase();
- const cjLower = String(cjTitle || "").toLowerCase();
+  const score = scoreMatch(shopifyTitle, cjTitle);
+  const importantMatchCount = countImportantMatches(shopifyTitle, cjTitle);
 
- const strongKeywords = [
- "sofa",
- "bed",
- "fountain",
- "collar",
- "feeder",
- "Seat",
- "litter",
- "scratcher",
- "toy",
- "brush",
- "grooming",
- "cleaner",
- "remover",
- "carrier",
- "bowl"
- ];
+  // strong acceptance
+  if (importantMatchCount >= 2 && score >= 0.4) {
+    return {
+      score,
+      good: true
+    };
+  }
 
- const importantMatch = strongKeywords.some((word) =>
- shopifyLower.includes(word) && cjLower.includes(word)
- );
-
- if (importantMatch) {
- return {
- score: 1,
- good: true
- };
- }
-
- const score = scoreMatch(shopifyTitle, cjTitle);
-
- return {
- score,
- good: score >= 0.25
- };
+  // normal acceptance
+  return {
+    score,
+    good: score >= 0.5
+  };
 }
 
 module.exports = {
- isGoodCJMatch
+  isGoodCJMatch
 };
