@@ -94,14 +94,24 @@ async function createShopifyProduct(product) {
 
  const pricing = calculatePrice(product.cost || product.price || 0);
 
+const cleanTitle = product.title || "Untitled Product"; // ✅ ADD THIS
+
 const supplierHTML = product.supplierLink
-  ? `<div style="margin-top:20px;">
+? `<div style="margin-top:20px;">
 <a href="${product.supplierLink}" target="_blank"
 style="background:#000;color:#fff;padding:10px 15px;text-decoration:none;border-radius:5px;">
 🔗 View Supplier
 </a>
 </div>`
-  : "";
+: "";
+
+return {
+product: {
+title: cleanTitle,
+body_html: landingHTML + supplierHTML,
+...
+}
+};
 
 const landingHTML = generateLanding(product);
 
