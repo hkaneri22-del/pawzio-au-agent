@@ -90,9 +90,14 @@ async function createShopifyProduct(product) {
 
  const pricing = calculatePrice(product.cost || product.price || 0);
 
- const landingHTML = generateLanding(product);
-
-
+ const supplierHTML = product.supplierLink
+? `<div style="margin-top:20px;">
+<a href="${product.supplierLink}" target="_blank"
+style="background:#000;color:#fff;padding:10px 15px;text-decoration:none;border-radius:5px;">
+🔗 View Supplier
+</a>
+</div>`
+: "";
 
  const imageArray =
  product.images && product.images.length
@@ -104,7 +109,7 @@ async function createShopifyProduct(product) {
  const payload = {
  product: {
  title: cleanTitle,
- body_html: landingHTML,
+ body_html: landingHTML + supplierHTML,
  vendor: product.vendor || "Pawzio",
  product_type: product.product_type || "Pet Supplies",
  tags: "AI_IMPORTED,CJ_PRODUCT,REVIEW_PENDING",
