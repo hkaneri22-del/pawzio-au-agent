@@ -2,24 +2,20 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 const { generateAIImage } = require("./imageGenerator");
 
-
 function getAmazonSearchLink(product) {
 try {
 const query = encodeURIComponent(
 String(product?.trendKeyword || product?.title || "").trim()
 );
 
-return query
-? `https://www.amazon.com/s?k=${query}`
-: null;
-
+return query ? `https://www.amazon.com/s?k=${query}` : null;
 } catch (err) {
 console.log("❌ Amazon link error:", err.message);
 return null;
 }
 }
 
-// 🔁 Fallback images (jab scraping fail ho)
+// 🔁 Fallback images
 const fallbackImages = {
 "slow feeder dog bowl": "https://m.media-amazon.com/images/I/71nQd1kM7CL._AC_SL1500_.jpg",
 "dog harness": "https://m.media-amazon.com/images/I/71mV8mF0d8L._AC_SL1500_.jpg",
@@ -33,7 +29,6 @@ const fallbackImages = {
 "dog bed": "https://m.media-amazon.com/images/I/71n8mNVjyTOL._AC_SL1500_.jpg"
 };
 
-// 🔁 fallback image finder
 function getFallbackImage(product) {
 const keyword = String(product?.trendKeyword || product?.title || "")
 .toLowerCase()
@@ -42,16 +37,6 @@ const keyword = String(product?.trendKeyword || product?.title || "")
 return fallbackImages[keyword] || "";
 }
 
-// 🔗 Amazon search link generator
-function getAmazonSearchLink(product) {
-const query = encodeURIComponent(
-String(product?.trendKeyword || product?.title || "").trim()
-);
-
-return query ? `https://www.amazon.com/s?k=${query}` : null;
-}
-
-// 🧠 MAIN ENRICH FUNCTION
 async function enrichProduct(product) {
 try {
 if (!product || !product.title) return product;
@@ -74,52 +59,52 @@ timeout: 10000
 });
 
 const $ = cheerio.load(data);
-
 const firstItem = $(".s-result-item").first();
 
 const image =
 firstItem.find("img").attr("src") || getFallbackImage(product);
 
-const link =
-"https://www.amazon.com" +
-(firstItem.find("a").attr("href") || "");
+const href = firstItem.find("a").attr("href") || "";
+const link = href ? `https://www.amazon.com${href}` : "";
 
 let finalImages = image ? [image] : [];
 
-// 👉 AI fallback (IMPORTANT)
+// 👉 AI fallback
 if (!finalImages.length) {
-  const aiImage = await generateAIImage(product);
-  if (aiImage) {
-    finalImages = [aiImage];
-    console.log("🧠 AI image used");
-  }
+const aiImage = await generateAIImage(product);
+if (aiImage) {
+finalImages = [aiImage];
+console.log("🧠 AI image used");
+}
 }
 
 return {
-  ...product,
-  images: finalImages,
-  supplierLink: link || getAmazonSearchLink(product),
-  supplierStatus: link ? "found" : "fallback"
+...product,
+images: finalImages,
+supplierLink: link || getAmazonSearchLink(product),
+supplierStatus: link ? "found" : "fallback"
 };
 } catch (err) {
-    console.log("❌ Enrichment failed:", err.message);
+console.log("❌ Enrichment failed:", err.message);
 
-    let image =
-      product.images?.length
-        ? product.images[0]
-        : getFallbackImage(product);
+let image = product.images?.length
+? product.images[0]
+: getFallbackImage(product);
 
-    if (!image) {
-      image = await generateAIImage(product);
-    }
+if (!image) {
+image = await generateAIImage(product);
+if (image) {
+console.log("🧠 AI image used in catch block");
+}
+}
 
-    return {
-      ...product,
-      images: image ? [image] : [],
-      supplierLink: getAmazonSearchLink(product),
-      supplierStatus: "fallback"
-    };
-  }
+return {
+...product,
+images: image ? [image] : [],
+supplierLink: getAmazonSearchLink(product),
+supplierStatus: "fallback"
+};
+}
 }
 
 module.exports = { enrichProduct };
