@@ -106,7 +106,7 @@ saveViralCandidates(freshShortlisted.slice(0, 10));
  ? queuedCandidates
  : freshShortlisted.slice(0, 2);
 
-  (let product of processingList) {
+  for (let product of processingList) {
  try {
  if (
  productMemory &&
