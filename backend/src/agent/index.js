@@ -185,7 +185,35 @@ if (!cjProduct) {
   continue;
 }
 console.log("CJ selector chose:", cjProduct.title);
+console.log("🔍 CJ candidates selected title:", cjProduct.title);
 
+const requiredPetWords = ["pet", "dog", "cat"];
+const titleLowerForPetCheck = String(cjProduct.title || "").toLowerCase();
+
+const hasPetWord = requiredPetWords.some((word) =>
+  titleLowerForPetCheck.includes(word)
+);
+
+if (!hasPetWord) {
+  console.log("Rejected: Not a pet product");
+
+  if (
+    productMemory &&
+    typeof productMemory.addMemoryRecord === "function"
+  ) {
+    productMemory.addMemoryRecord({
+      title: product.title,
+      status: "rejected",
+      reason: "not_pet_product",
+      score: product.score || 0,
+      source: "cj_pet_filter",
+      cjTitle: cjProduct.title || ""
+    });
+  }
+
+  markCandidateTested(product.title);
+  continue;
+}
  if (!cjProduct || !cjProduct.title) {
  console.log("Invalid CJ product, skipping");
 
@@ -339,6 +367,7 @@ continue; }
  const match = isGoodCJMatch(product.title, cjProduct.title);
 
 console.log("CJ match score:", match.score);
+console.log("CJ important keyword matches:", match.importantMatchCount);
 
 if (!match.good) {
   console.log("Rejected: weak CJ match");

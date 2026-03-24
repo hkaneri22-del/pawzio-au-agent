@@ -28,22 +28,24 @@ function countImportantMatches(shopifyTitle, cjTitle) {
   const cjLower = String(cjTitle || "").toLowerCase();
 
   const strongKeywords = [
-    "bed",
-    "fountain",
+    "pet",
+    "dog",
+    "cat",
     "collar",
-    "feeder",
-    "seat",
-    "litter",
-    "scratcher",
-    "toy",
     "brush",
-    "grooming",
-    "cleaner",
     "remover",
-    "carrier",
+    "fountain",
+    "feeder",
+    "toy",
+    "bed",
     "bowl",
+    "carrier",
+    "cleaner",
+    "grooming",
+    "hair",
     "leash",
-    "harness"
+    "harness",
+    "tunnel"
   ];
 
   let count = 0;
@@ -61,18 +63,15 @@ function isGoodCJMatch(shopifyTitle, cjTitle) {
   const score = scoreMatch(shopifyTitle, cjTitle);
   const importantMatchCount = countImportantMatches(shopifyTitle, cjTitle);
 
-  // strong acceptance
-  if (importantMatchCount >= 2 && score >= 0.4) {
-    return {
-      score,
-      good: true
-    };
-  }
+  // strict logic
+  const good =
+    (importantMatchCount >= 2 && score >= 0.4) ||
+    score >= 0.6;
 
-  // normal acceptance
   return {
     score,
-    good: score >= 0.5
+    importantMatchCount,
+    good
   };
 }
 
