@@ -1,3 +1,7 @@
+console.log("📦 Shopify payload title:", cleanTitle);
+console.log("📦 Shopify payload image count:", imageArray.length);
+console.log("📦 Shopify payload first image:", imageArray[0]?.src || "none");
+
 const axios = require("axios");
 const { calculatePrice } = require("./pricingEngine");
 const { generateLanding } = require("./landingGenerator");
@@ -110,6 +114,8 @@ const validImage =
     : "";
 
 const imageArray = validImage ? [{ src: validImage }] : [];
+
+console.log("🖼 Shopify image selected:", validImage || "none");
 
 const payload = {
   product: {

@@ -1,5 +1,8 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
+const { generateAIImage } = require("./imageGenerator");
+
+
 function getAmazonSearchLink(product) {
 try {
 const query = encodeURIComponent(
@@ -89,18 +92,24 @@ supplierStatus: link ? "found" : "fallback"
 };
 
 } catch (err) {
-console.log("❌ Enrichment failed:", err.message);
+    console.log("❌ Enrichment failed:", err.message);
 
-// 🔁 fallback system (VERY IMPORTANT)
-return {
-...product,
-images: product.images?.length
-? product.images
-: [getFallbackImage(product)],
-supplierLink: getAmazonSearchLink(product),
-supplierStatus: "fallback"
-};
-}
+    let image =
+      product.images?.length
+        ? product.images[0]
+        : getFallbackImage(product);
+
+    if (!image) {
+      image = await generateAIImage(product);
+    }
+
+    return {
+      ...product,
+      images: image ? [image] : [],
+      supplierLink: getAmazonSearchLink(product),
+      supplierStatus: "fallback"
+    };
+  }
 }
 
 module.exports = { enrichProduct };
