@@ -359,16 +359,34 @@ if (!match.good) {
  markCandidateTested(product.title);
   continue;
 }
- 
+ const supplierProduct = {
+  ...cjProduct,
+  title: cjProduct.title || product.title,
+  price: cjProduct.price || product.price,
+  images: cjProduct.images || product.images || [],
+  image: (cjProduct.images && cjProduct.images[0]) || "",
+  supplierSource: "CJ",
+  supplierLink: cjProduct.link || cjProduct.url || null
+};
+
+console.log("✅ Supplier product ready:", supplierProduct.title);
  const created = await createShopifyProduct(supplierProduct);
- if (created) {
+
+if (created) {
   saveCampaignDraft({
     title: supplierProduct.title || product.title,
-    image: supplierProduct.image || (supplierProduct.images && supplierProduct.images[0]) || ""
+    image:
+      supplierProduct.image ||
+      (supplierProduct.images && supplierProduct.images[0]) ||
+      ""
   });
-    saveCreativeDraft({
+
+  saveCreativeDraft({
     title: supplierProduct.title || product.title,
-    image: supplierProduct.image || (supplierProduct.images && supplierProduct.images[0]) |s| "",
+    image:
+      supplierProduct.image ||
+      (supplierProduct.images && supplierProduct.images[0]) ||
+      "",
     images: supplierProduct.images || []
   });
 }
