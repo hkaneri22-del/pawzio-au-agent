@@ -162,7 +162,10 @@ const normalizedCandidates = cjCandidates
     }
   })
   .filter(Boolean);
-
+console.log(
+  "🔎 Normalized CJ candidates:",
+  normalizedCandidates.map((p) => p.title)
+);
 const cjProduct = pickBestCJProduct(product.title, normalizedCandidates);
 
 if (!cjProduct) {
