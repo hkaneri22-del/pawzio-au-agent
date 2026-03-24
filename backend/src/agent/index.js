@@ -26,6 +26,7 @@ require("dotenv").config();
  const { pickBestCJProduct } = require("./cjSmartSelector");
  const { scanTrends } = require("./trendScanner");
  const { checkMetaAdProof } = require("./adProofEngine");
+ const { enrichProduct } = require("./productEnricher");
 
  console.log("All modules loaded successfully");
 
@@ -37,14 +38,22 @@ require("dotenv").config();
  const researched = await scanTrends();
 
  if (researched && researched.length) {
-  const proofedProducts = researched.map((p) => {
-    const proof = checkMetaAdProof(p);
-    return {
-      ...p,
-      adProof: proof,
-      proofStatus: proof.found ? "validated" : "weak"
-    };
+  const proofedProducts = [];
+
+for (let p of researched) {
+
+  // 🔥 STEP 1: enrich (image + supplier)
+  p = await enrichProduct(p);
+
+  // 🔥 STEP 2: ad proof
+  const proof = checkMetaAdProof(p);
+
+  proofedProducts.push({
+    ...p,
+    adProof: proof,
+    proofStatus: proof.found ? "validated" : "weak"
   });
+}
 
   console.log("📣 Products after Meta Ad Proof:");
   console.log(proofedProducts);
@@ -97,7 +106,7 @@ saveViralCandidates(freshShortlisted.slice(0, 10));
  ? queuedCandidates
  : freshShortlisted.slice(0, 2);
 
- for (let product of processingList) {
+  (let product of processingList) {
  try {
  if (
  productMemory &&
