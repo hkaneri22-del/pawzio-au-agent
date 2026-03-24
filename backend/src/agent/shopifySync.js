@@ -63,16 +63,29 @@ async function createShopifyProduct(product) {
 
  if (!cleanTitle) {
  console.log(" Empty title, skipping Shopify create");
- return null;
+ return {
+  success: false,
+  title: "",
+  status: "invalid",
+  handle: null,
+  url: null
+};
  }
 
  const alreadyExists = await productExistsInShopify(cleanTitle);
 
  if (alreadyExists) {
  console.log(" Product already exists in Shopify:", cleanTitle);
- return null;
- }
 
+ return {
+   success: true,
+   title: cleanTitle,
+   status: "existing",
+   handle: null,
+   url: null,
+   existing: true
+ };
+}
 
 
  const pricing = calculatePrice(product.cost || product.price || 0);
@@ -126,9 +139,21 @@ async function createShopifyProduct(product) {
 
 
 
- console.log(" Shopify product created:", cleanTitle);
+ const createdProduct = response.data.product;
 
- return response.data.product;
+console.log(" Shopify product created:", cleanTitle);
+
+return {
+success: true,
+title: cleanTitle,
+id: createdProduct.id || null,
+handle: createdProduct.handle || null,
+status: createdProduct.status || "draft",
+url:
+createdProduct.handle
+? `https://${SHOPIFY_STORE}/products/${createdProduct.handle}`
+: null
+};
 
  } catch (err) {
 
@@ -140,7 +165,15 @@ async function createShopifyProduct(product) {
  console.log(err.message);
  }
 
- return null;
+ return {
+  success: false,
+  title: cleanTitle,
+  id: null,
+  handle: null,
+  status: "failed",
+  url: null,
+  error: err.message
+};
  }
 }
 
@@ -161,3 +194,4 @@ module.exports = {
  sync,
  createShopifyProduct,
 };
+

@@ -129,28 +129,41 @@ saveViralCandidates(freshShortlisted.slice(0, 10));
  // 🔥 CREATE SHOPIFY DRAFT WITHOUT CJ
 console.log("🛒 Creating Shopify draft (trend-based)...");
 
-const created = await createShopifyProduct({
+const trendCreated = await createShopifyProduct({
   title: product.title,
   description: product.description,
   price: product.price,
   images: product.images || []
 });
 
-if (created) {
+if (trendCreated && trendCreated.success) {
   console.log("✅ Shopify draft created (trend mode)");
+  console.log("Shopify result:", trendCreated);
 
-  saveCampaignDraft({
-    title: product.title,
-    image: (product.images && product.images[0]) || ""
-  });
+  const landingReady = trendCreated.handle || trendCreated.url;
 
-  saveCreativeDraft({
-    title: product.title,
-    image: (product.images && product.images[0]) || "",
-    images: product.images || []
-  });
-}
- console.log("Trying CJ match for:", product.title);
+  if (!landingReady) {
+    console.log("⏳ Landing page not active yet, skipping campaign save");
+  } else {
+    console.log("🚀 Landing ready → saving campaign");
+
+    saveCampaignDraft({
+      title: product.title,
+      image: (product.images && product.images[0]) || "",
+      productHandle: trendCreated.handle || "",
+      productUrl: trendCreated.url || ""
+    });
+
+    saveCreativeDraft({
+      title: product.title,
+      image: (product.images && product.images[0]) || "",
+      images: product.images || [],
+      productHandle: trendCreated.handle || "",
+      productUrl: trendCreated.url || ""
+    });
+  }
+} 
+console.log("Trying CJ match for:", product.title);
 
  const cjRaw = await cjIntegration.searchCJProductByKeyword(product.title);
  await new Promise(resolve => setTimeout(resolve, 1200));
@@ -422,24 +435,41 @@ console.log("✅ Supplier product ready:", supplierProduct.title);
  const trendCreated = await createShopifyProduct(supplierProduct);
 
 if (trendCreated) {
-  saveCampaignDraft({
-    title: supplierProduct.title || product.title,
-    image:
-      supplierProduct.image ||
-      (supplierProduct.images && supplierProduct.images[0]) ||
-      ""
-  });
+  console.log("✅ Shopify draft created (trend mode)");
 
-  saveCreativeDraft({
-    title: supplierProduct.title || product.title,
-    image:
-      supplierProduct.image ||
-      (supplierProduct.images && supplierProduct.images[0]) ||
-      "",
-    images: supplierProduct.images || []
-  });
-}
- if (
+  const landingReady =
+    trendCreated &&
+    typeof trendCreated === "object" &&
+    (trendCreated.handle || trendCreated.url || trendCreated.onlineStoreUrl);
+
+  if (!landingReady) {
+    console.log("⏳ Landing page not active yet, skipping campaign save");
+  } else {
+    console.log("🚀 Landing page active, saving campaign draft");
+
+    saveCampaignDraft({
+      title: product.title,
+      image: (product.images && product.images[0]) || "",
+      productHandle: trendCreated.handle || "",
+      productUrl:
+        trendCreated.url ||
+        trendCreated.onlineStoreUrl ||
+        ""
+    });
+
+    saveCreativeDraft({
+      title: product.title,
+      image: (product.images && product.images[0]) || "",
+      images: product.images || [],
+      productHandle: trendCreated.handle || "",
+      productUrl:
+        trendCreated.url ||
+        trendCreated.onlineStoreUrl ||
+        ""
+    });
+  }
+} 
+if (
  productMemory &&
  typeof productMemory.addMemoryRecord === "function"
  ) {
