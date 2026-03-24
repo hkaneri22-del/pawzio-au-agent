@@ -138,9 +138,9 @@ const shopifyResult = await createShopifyProduct({
 
 if (shopifyResult && shopifyResult.success) {
   console.log("✅ Shopify draft created (trend mode)");
-  console.log("Shopify result:", trendCreated);
+  console.log("Shopify result:", shopifyResult);
 
-  const landingReady = trendCreated.handle || trendCreated.url;
+  const landingReady = shopifyResult.handle || shopifyResult.url;
 
   if (!landingReady) {
     console.log("⏳ Landing page not active yet, skipping campaign save");
@@ -150,19 +150,20 @@ if (shopifyResult && shopifyResult.success) {
     saveCampaignDraft({
       title: product.title,
       image: (product.images && product.images[0]) || "",
-      productHandle: trendCreated.handle || "",
-      productUrl: trendCreated.url || ""
+      productHandle: shopifyResult.handle || "",
+      productUrl: shopifyResult.url || ""
     });
 
     saveCreativeDraft({
       title: product.title,
       image: (product.images && product.images[0]) || "",
       images: product.images || [],
-      productHandle: trendCreated.handle || "",
-      productUrl: trendCreated.url || ""
+      productHandle: shopifyResult.handle || "",
+      productUrl: shopifyResult.url || ""
     });
   }
-} 
+}
+
 console.log("Trying CJ match for:", product.title);
 
  const cjRaw = await cjIntegration.searchCJProductByKeyword(product.title);
