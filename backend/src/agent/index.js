@@ -16,7 +16,6 @@ require("dotenv").config();
  const productResearch = require("./productResearch");
  const { scoreProduct } = require("./productScoring");
  const { createShopifyProduct } = require("./shopifySync");
- const { isProfitable } = require("./profitEngine");
  const { saveViralCandidates } = require("./viralDiscovery");
  const { getNextViralCandidates, markCandidateTested } = require("./viralQueue");
  const productMemory = require("./productMemory");
@@ -346,40 +345,17 @@ if (!match.good) {
  markCandidateTested(product.title);
   continue;
 }
- const profitCheck = isProfitable(cjProduct);
-
-console.log("Profit analysis:", profitCheck.analysis);
-
-if (!profitCheck.pass) {
-  console.log("Rejected: Low profit margin");
-
-  if (
-    productMemory &&
-    typeof productMemory.addMemoryRecord === "function"
-  ) {
-    productMemory.addMemoryRecord({
-      title: product.title,
-      status: "rejected",
-      reason: "low_profit_margin",
-      score: product.score || 0,
-      source: "profit_engine",
-      cjTitle: cjProduct.title || ""
-    });
-  }
-  markCandidateTested(product.title);
-  continue;
-}
-
- const created = await createShopifyProduct(cjProduct);
+ 
+ const created = await createShopifyProduct(supplierProduct);
  if (created) {
   saveCampaignDraft({
-    title: cjProduct.title || product.title,
-    image: cjProduct.image || (cjProduct.images && cjProduct.images[0]) || ""
+    title: supplierProduct.title || product.title,
+    image: supplierProduct.image || (supplierProduct.images && supplierProduct.images[0]) || ""
   });
     saveCreativeDraft({
-    title: cjProduct.title || product.title,
-    image: cjProduct.image || (cjProduct.images && cjProduct.images[0]) || "",
-    images: cjProduct.images || []
+    title: supplierProduct.title || product.title,
+    image: supplierProduct.image || (supplierProduct.images && supplierProduct.images[0]) || "",
+    images: supplierProduct.images || []
   });
 }
  if (
