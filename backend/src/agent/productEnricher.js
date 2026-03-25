@@ -7,7 +7,6 @@ try {
 const query = encodeURIComponent(
 String(product?.trendKeyword || product?.title || "").trim()
 );
-
 return query ? `https://www.amazon.com/s?k=${query}` : null;
 } catch (err) {
 console.log("❌ Amazon link error:", err.message);
@@ -15,8 +14,8 @@ return null;
 }
 }
 
-// 🔁 Fallback images
 const fallbackImages = {
+"dog chew toy": "https://m.media-amazon.com/images/I/71wTQzJQeVL._AC_SL1500_.jpg",
 "slow feeder dog bowl": "https://m.media-amazon.com/images/I/71nQd1kM7CL._AC_SL1500_.jpg",
 "dog harness": "https://m.media-amazon.com/images/I/71mV8mF0d8L._AC_SL1500_.jpg",
 "cat tunnel toy": "https://m.media-amazon.com/images/I/71K8sKQw2JL._AC_SL1500_.jpg",
@@ -34,7 +33,7 @@ const keyword = String(product?.trendKeyword || product?.title || "")
 .toLowerCase()
 .trim();
 
-return fallbackImages[keyword] || "";
+return fallbackImages[keyword] || "https://m.media-amazon.com/images/I/71wTQzJQeVL._AC_SL1500_.jpg";
 }
 
 async function enrichProduct(product) {
@@ -61,26 +60,28 @@ timeout: 10000
 const $ = cheerio.load(data);
 const firstItem = $(".s-result-item").first();
 
-const image =
+let image =
 firstItem.find("img").attr("src") || getFallbackImage(product);
 
 const href = firstItem.find("a").attr("href") || "";
 const link = href ? `https://www.amazon.com${href}` : "";
 
-let finalImages = image ? [image] : [];
-
-// 👉 AI fallback
-if (!finalImages.length) {
+if (!image) {
 const aiImage = await generateAIImage(product);
 if (aiImage) {
-finalImages = [aiImage];
+image = aiImage;
 console.log("🧠 AI image used");
 }
 }
 
+if (!image) {
+image = getFallbackImage(product);
+console.log("🛟 Static fallback image used");
+}
+
 return {
 ...product,
-images: finalImages,
+images: image ? [image] : [],
 supplierLink: link || getAmazonSearchLink(product),
 supplierStatus: link ? "found" : "fallback"
 };
@@ -89,13 +90,19 @@ console.log("❌ Enrichment failed:", err.message);
 
 let image = product.images?.length
 ? product.images[0]
-: getFallbackImage(product);
+: null;
 
 if (!image) {
-image = await generateAIImage(product);
-if (image) {
+const aiImage = await generateAIImage(product);
+if (aiImage) {
+image = aiImage;
 console.log("🧠 AI image used in catch block");
 }
+}
+
+if (!image) {
+image = getFallbackImage(product);
+console.log("🛟 Static fallback image used in catch block");
 }
 
 return {
